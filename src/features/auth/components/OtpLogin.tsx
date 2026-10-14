@@ -1,8 +1,19 @@
 import { useOtpLogin } from '../hooks/useOtpLogin'
 import EmailForm from './EmailForm'
+import CodeForm from './CodeForm'
 
 function OtpLogin() {
-  const { step, email, isLoading, error, sendCode } = useOtpLogin()
+  const {
+    step,
+    email,
+    session,
+    isLoading,
+    error,
+    sendCode,
+    verifyCode,
+    resendCode,
+    changeEmail,
+  } = useOtpLogin()
 
   if (step === 'email') {
     return (
@@ -14,8 +25,26 @@ function OtpLogin() {
     )
   }
 
-  // Paso 'code': temporal, en el paso 4 aquí irá el formulario del código
-  return <p>Te enviamos un código a {email}. Revisa tu correo.</p>
+  if (step === 'code') {
+    return (
+      <CodeForm
+        email={email}
+        isLoading={isLoading}
+        error={error}
+        onSubmit={verifyCode}
+        onResend={resendCode}
+        onChangeEmail={changeEmail}
+      />
+    )
+  }
+
+  // Paso 'done': temporal, en el paso 5 la sesión se guardará en Context
+  return (
+    <div>
+      <p>Bienvenido, {session?.email}</p>
+      <p>Rol: {session?.rol}</p>
+    </div>
+  )
 }
 
 export default OtpLogin
