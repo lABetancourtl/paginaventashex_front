@@ -2,7 +2,9 @@ import { useState } from 'react'
 import ProductCard from './features/catalog/components/ProductCard'
 import CategoryList from './features/catalog/components/CategoryList'
 import DepartamentoList from './features/geography/components/DepartamentoList'
-import OtpLogin from './features/auth/components/OtpLogin'
+import LoginModal from './features/auth/components/LoginModal'
+import AuthTest from './features/auth/components/AuthTest'
+import { useAuth } from './features/auth/hooks/useAuth'
 
 const products = [
   { id: 1, name: 'Audífonos Bluetooth', price: 150000 },
@@ -11,6 +13,7 @@ const products = [
 ]
 
 function App() {
+  const { session, openLogin, logout } = useAuth()
   const [cartCount, setCartCount] = useState(0)
 
   const handleAddToCart = (quantity: number) => {
@@ -19,9 +22,27 @@ function App() {
 
   return (
     <div>
-      <h1>PaginaVentasNet</h1>
+      {/* Header provisional: luego será su propio componente */}
+      <header>
+        <h1>PaginaVentasNet</h1>
+        {session ? (
+          <div>
+            <span>Hola, {session.email}</span>
+            <button type="button" onClick={logout}>
+              Cerrar sesión
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={openLogin}>
+            Iniciar sesión
+          </button>
+        )}
+      </header>
 
-      <OtpLogin />
+      {/* El modal se monta una sola vez, para toda la app */}
+      <LoginModal />
+
+      <AuthTest />
 
       <p>Productos en el carrito: {cartCount}</p>
 

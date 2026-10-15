@@ -1,9 +1,8 @@
 import axios from 'axios'
 import type { ApiResponse } from '../types/api'
+import { loadSession } from '../features/auth/services/authStorage' // NUEVO
 
 // ─── Error propio de la aplicación ───────────────────────────
-// Todos los errores HTTP se convierten a este tipo,
-// para que los hooks siempre reciban lo mismo.
 export class ApiRequestError extends Error {
   code: string
   status: number | null
@@ -23,13 +22,20 @@ export const http = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// ─── NUEVO: puerto para reaccionar a un 401 ──────────────────
+// El cliente no sabe qué hacer ante un 401; quien lo registre decide.
+let onUnauthorized: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler
+}
+
 // ─── Traducir cualquier error de Axios a ApiRequestError ─────
 function toApiRequestError(error: unknown): ApiRequestError {
   if (!axios.isAxiosError(error)) {
     return new ApiRequestError('Error inesperado', 'UNKNOWN', null)
   }
 
-  // Caso 1: no hubo respuesta (sin internet o timeout)
   if (!error.response) {
     return new ApiRequestError(
       'No se pudo conectar con el servidor. Revisa tu conexión.',
@@ -41,12 +47,10 @@ function toApiRequestError(error: unknown): ApiRequestError {
   const status = error.response.status
   const body = error.response.data as ApiResponse<unknown> | undefined
 
-  // Caso 2: el backend respondió con tu formato estándar de error
   if (body?.error) {
     return new ApiRequestError(body.error.message, body.error.code, status)
   }
 
-  // Caso 3: respondió sin cuerpo (como tu 401 de antes)
   if (status === 401) {
     return new ApiRequestError('Debes iniciar sesión para continuar.', 'UNAUTHORIZED', status)
   }
@@ -55,6 +59,13 @@ function toApiRequestError(error: unknown): ApiRequestError {
   }
   if (status === 404) {
     return new ApiRequestError('El recurso solicitado no existe.', 'NOT_FOUND', status)
+  }
+    if (status === 429) {
+    return new ApiRequestError(
+      'Demasiados intentos. Espera un momento antes de volver a intentar.',
+      'TOO_MANY_REQUESTS',
+      status,
+    )
   }
   if (status >= 500) {
     return new ApiRequestError(
@@ -67,16 +78,39 @@ function toApiRequestError(error: unknown): ApiRequestError {
   return new ApiRequestError('Ocurrió un error inesperado.', 'UNKNOWN', status)
 }
 
+// ─── NUEVO: interceptor de request ───────────────────────────
+// Se ejecuta ANTES de cada petición y agrega el token si existe
+http.interceptors.request.use((config) => {
+  const session = loadSession()
+
+  if (session) {
+    config.headers.Authorization = `Bearer ${session.token}`
+  }
+
+  return config
+})
+
+// ─── Interceptor de respuesta (MODIFICADO) ───────────────────
 // ─── Interceptor de respuesta ────────────────────────────────
-// Si la respuesta es 2xx, pasa sin cambios.
-// Si es un error, lo convierte antes de que llegue al servicio.
 http.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(toApiRequestError(error)),
+  (error) => {
+    const apiError = toApiRequestError(error)
+
+    // ¿La petición llevaba token? Solo en ese caso el 401 significa
+    // "tu sesión ya no es válida". Sin token, es un error de credenciales.
+    const sentToken =
+      axios.isAxiosError(error) && Boolean(error.config?.headers?.Authorization)
+
+    if (apiError.status === 401 && sentToken) {
+      onUnauthorized?.()
+    }
+
+    return Promise.reject(apiError)
+  },
 )
 
 // ─── Desenvolver el ApiResponse<T> ───────────────────────────
-// Lógica común a todos los helpers: revisar success y sacar data.
 function unwrap<T>(body: ApiResponse<T>): T {
   if (!body.success) {
     throw new ApiRequestError(
@@ -96,7 +130,6 @@ export async function apiGet<T>(url: string, params?: object): Promise<T> {
 }
 
 // ─── Helper para peticiones POST ─────────────────────────────
-// "data" es el cuerpo que se envía (lo que en .NET recibe [FromBody])
 export async function apiPost<T>(url: string, data?: unknown): Promise<T> {
   const response = await http.post<ApiResponse<T>>(url, data)
   return unwrap(response.data)

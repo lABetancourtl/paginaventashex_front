@@ -6,7 +6,6 @@ function OtpLogin() {
   const {
     step,
     email,
-    session,
     isLoading,
     error,
     sendCode,
@@ -25,25 +24,15 @@ function OtpLogin() {
     )
   }
 
-  if (step === 'code') {
-    return (
-      <CodeForm
-        email={email}
-        isLoading={isLoading}
-        error={error}
-        onSubmit={verifyCode}
-        onResend={resendCode}
-        onChangeEmail={changeEmail}
-      />
-    )
-  }
-
-  // Paso 'done': temporal, en el paso 5 la sesión se guardará en Context
   return (
-    <div>
-      <p>Bienvenido, {session?.email}</p>
-      <p>Rol: {session?.rol}</p>
-    </div>
+    <CodeForm
+      email={email}
+      isLoading={isLoading}
+      error={error}
+      onSubmit={verifyCode}
+      onResend={resendCode}
+      onChangeEmail={changeEmail}
+    />
   )
 }
 

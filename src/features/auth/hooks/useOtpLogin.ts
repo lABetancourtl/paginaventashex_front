@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { sendOtp, verifyOtp } from '../services/authService'
-import type { AuthSession } from '../types'
+import { useAuth } from './useAuth'
 
-// Ahora el flujo tiene tres pasos
-type LoginStep = 'email' | 'code' | 'done'
+// Ya no necesitamos el paso 'done': la sesión vive en el Context
+type LoginStep = 'email' | 'code'
 
 export function useOtpLogin() {
+  const { login } = useAuth()
+
   const [step, setStep] = useState<LoginStep>('email')
   const [email, setEmail] = useState('')
-  const [session, setSession] = useState<AuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Paso 1: enviar el código al email
   const sendCode = async (emailToSend: string) => {
     setIsLoading(true)
     setError(null)
@@ -29,15 +29,14 @@ export function useOtpLogin() {
     }
   }
 
-  // Paso 2: verificar el código y obtener la sesión
   const verifyCode = async (code: string) => {
     setIsLoading(true)
     setError(null)
 
     try {
       const data = await verifyOtp({ email, code })
-      setSession(data)
-      setStep('done')
+      login(data)        // Guarda la sesión en el Context y en localStorage
+      setStep('email')   // Deja el formulario listo por si cierra sesión
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido'
       setError(message)
@@ -46,12 +45,10 @@ export function useOtpLogin() {
     }
   }
 
-  // Volver a enviar el código al mismo email
   const resendCode = () => {
     sendCode(email)
   }
 
-  // Volver al paso del email por si se equivocó
   const changeEmail = () => {
     setError(null)
     setStep('email')
@@ -60,7 +57,6 @@ export function useOtpLogin() {
   return {
     step,
     email,
-    session,
     isLoading,
     error,
     sendCode,
