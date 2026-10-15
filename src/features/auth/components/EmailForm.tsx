@@ -2,17 +2,17 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 interface EmailFormProps {
+  initialEmail?: string // NUEVO: opcional
   isLoading: boolean
   error: string | null
   onSubmit: (email: string) => void
 }
 
-function EmailForm({ isLoading, error, onSubmit }: EmailFormProps) {
-  // Lo que el usuario está escribiendo en este momento
-  const [email, setEmail] = useState('')
+function EmailForm({ initialEmail = '', isLoading, error, onSubmit }: EmailFormProps) {
+  const [email, setEmail] = useState(initialEmail)
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault() // Evita que el navegador recargue la página
+    e.preventDefault()
     onSubmit(email.trim())
   }
 
@@ -28,6 +28,7 @@ function EmailForm({ isLoading, error, onSubmit }: EmailFormProps) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="tu@correo.com"
+        autoComplete="email"
         required
         disabled={isLoading}
       />

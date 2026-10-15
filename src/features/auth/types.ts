@@ -1,4 +1,3 @@
-// Roles posibles (deben coincidir con el enum Rol del backend)
 export type Rol = 'Cliente' | 'Admin'
 
 // Body de POST /api/auth/otp/send
@@ -12,7 +11,13 @@ export interface VerifyOtpRequest {
   code: string
 }
 
-// Lo que retorna POST /api/auth/otp/verify en "data"
+// NUEVO: body de POST /api/auth/login
+export interface PasswordLoginRequest {
+  email: string
+  password: string
+}
+
+// Lo que retornan /otp/verify y /login en "data"
 export interface AuthSession {
   token: string
   email: string
