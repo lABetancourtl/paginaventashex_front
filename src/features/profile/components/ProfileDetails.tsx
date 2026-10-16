@@ -1,6 +1,6 @@
 import type { Profile } from '../types'
-import { formatDateOnly } from '../../../utils/formatters'
 import { GENERO_LABELS } from '../genero'
+import { formatDateOnly } from '../../../utils/formatters'
 
 interface ProfileDetailsProps {
   profile: Profile
@@ -12,29 +12,43 @@ function showValue(value: string | null): string {
   return value && value.trim() !== '' ? value : EMPTY
 }
 
+// ─── Un par etiqueta/valor ──────────────────────────────────
+interface DetailItemProps {
+  label: string
+  value: string
+  wide?: boolean // Si ocupa toda la fila
+}
+
+function DetailItem({ label, value, wide = false }: DetailItemProps) {
+  const isEmpty = value === EMPTY
+
+  return (
+    <div className={wide ? 'sm:col-span-2' : undefined}>
+      <dt className="text-xs font-bold uppercase tracking-wide">{label}</dt>
+      <dd className={`mt-1.5 break-words ${isEmpty ? 'italic text-ink-muted/70' : 'text-ink-muted'}`}>
+        {value}
+      </dd>
+    </div>
+  )
+}
+
+// ─── La lista completa ──────────────────────────────────────
 function ProfileDetails({ profile }: ProfileDetailsProps) {
   return (
-    <dl>
-      <dt>Nombre</dt>
-      <dd>{showValue(profile.nombre)}</dd>
-
-      <dt>Apellido</dt>
-      <dd>{showValue(profile.apellido)}</dd>
-
-      <dt>Email</dt>
-      <dd>{profile.email}</dd>
-
-      <dt>Documento</dt>
-      <dd>{showValue(profile.documento)}</dd>
-
-      <dt>Género</dt>
-      <dd>{profile.genero ? GENERO_LABELS[profile.genero] : EMPTY}</dd>
-
-      <dt>Fecha de nacimiento</dt>
-      <dd>{profile.fechaNacimiento ? formatDateOnly(profile.fechaNacimiento) : EMPTY}</dd>
-
-      <dt>Teléfono personal</dt>
-      <dd>{showValue(profile.telefono)}</dd>
+    <dl className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2">
+      <DetailItem label="Nombre" value={showValue(profile.nombre)} />
+      <DetailItem label="Apellido" value={showValue(profile.apellido)} />
+      <DetailItem label="Email" value={profile.email} wide />
+      <DetailItem label="Documento" value={showValue(profile.documento)} />
+      <DetailItem
+        label="Género"
+        value={profile.genero ? GENERO_LABELS[profile.genero] : EMPTY}
+      />
+      <DetailItem
+        label="Fecha de nacimiento"
+        value={profile.fechaNacimiento ? formatDateOnly(profile.fechaNacimiento) : EMPTY}
+      />
+      <DetailItem label="Teléfono personal" value={showValue(profile.telefono)} />
     </dl>
   )
 }

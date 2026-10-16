@@ -1,5 +1,13 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
+import FormField from '../../../components/FormField'
+import PasswordInput from '../../../components/PasswordInput'
+import {
+  inputClass,
+  linkButtonClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from '../../../components/formStyles'
 
 interface PasswordFormProps {
   isLoading: boolean
@@ -7,9 +15,21 @@ interface PasswordFormProps {
   suggestOtp: boolean
   onSubmit: (email: string, password: string) => void
   onUseOtp: (email: string) => void
+  onRegister: (email: string) => void      
+  onForgotPassword: (email: string) => void 
 }
 
-function PasswordForm({ isLoading, error, suggestOtp, onSubmit, onUseOtp }: PasswordFormProps) {
+function PasswordForm({
+  isLoading,
+  error,
+  suggestOtp,
+  onSubmit,
+  onUseOtp,
+  onRegister,
+  onForgotPassword,
+}: PasswordFormProps) {
+  const emailId = useId()
+  const passwordId = useId()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -19,46 +39,77 @@ function PasswordForm({ isLoading, error, suggestOtp, onSubmit, onUseOtp }: Pass
   }
 
   const trimmedEmail = email.trim()
+  const showSuggestion = suggestOtp && trimmedEmail !== ''
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Ingresar con contraseña</h2>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <FormField id={emailId} label="Correo electrónico">
+        <input
+          id={emailId}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="tu@correo.com"
+          autoComplete="email"
+          required
+          autoFocus
+          disabled={isLoading}
+          className={inputClass}
+        />
+      </FormField>
 
-      <label htmlFor="login-email">Correo electrónico</label>
-      <input
-        id="login-email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="tu@correo.com"
-        autoComplete="email"
-        required
-        disabled={isLoading}
-      />
+      <FormField id={passwordId} label="Contraseña">
+        <PasswordInput
+          id={passwordId}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+          required
+          disabled={isLoading}
+        />
+      </FormField>
 
-      <label htmlFor="login-password">Contraseña</label>
-      <input
-        id="login-password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        autoComplete="current-password"
-        required
-        disabled={isLoading}
-      />
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
 
-      {error && <p>{error}</p>}
-
-      <button type="submit" disabled={isLoading}>
+      <button type="submit" disabled={isLoading} className={primaryButtonClass}>
         {isLoading ? 'Ingresando...' : 'Ingresar'}
       </button>
 
-      {/* Un solo botón para cambiar a OTP, conservando el email escrito */}
-      <button type="button" onClick={() => onUseOtp(trimmedEmail)} disabled={isLoading}>
-        {suggestOtp && trimmedEmail
-          ? `Enviarme un código a ${trimmedEmail}`
-          : 'Ingresar con un código al correo'}
-      </button>
+      {showSuggestion && (
+        <button
+          type="button"
+          onClick={() => onUseOtp(trimmedEmail)}
+          disabled={isLoading}
+          className={secondaryButtonClass}
+        >
+          Enviarme un código a {trimmedEmail}
+        </button>
+      )}
+
+      {/* NUEVO: registro y recuperación, ambos llevan al ingreso con código */}
+      <div className="flex flex-col items-center gap-3 pt-1">
+        <button
+          type="button"
+          onClick={() => onRegister(trimmedEmail)}
+          disabled={isLoading}
+          className={linkButtonClass}
+        >
+          ¿No tienes cuenta? Regístrate
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onForgotPassword(trimmedEmail)}
+          disabled={isLoading}
+          className={linkButtonClass}
+        >
+          Olvidé mi contraseña
+        </button>
+      </div>
     </form>
   )
 }

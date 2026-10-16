@@ -1,16 +1,15 @@
 import { NavLink, Outlet, useNavigate } from 'react-router'
+import { LogOut } from 'lucide-react'
 import { useAuth } from '../features/auth/hooks/useAuth'
+import { useProfile } from '../features/profile/hooks/useProfile'
 import { getDisplayName } from '../utils/formatters'
+import { accountLinks } from '../features/account/accountLinks'
 
-// Opciones del menú lateral
-const accountLinks = [
-  { to: '/cuenta/perfil', label: 'Perfil' },
-  { to: '/cuenta/direcciones', label: 'Direcciones' },
-  { to: '/cuenta/autenticacion', label: 'Autenticación' },
-]
+const itemBase = 'flex items-center gap-3 py-2.5 text-sm uppercase tracking-wide'
 
 function AccountLayout() {
   const { session, logout } = useAuth()
+  const { data: profile } = useProfile()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -18,24 +17,39 @@ function AccountLayout() {
     navigate('/')
   }
 
-  // Por ahora usamos el email; con TanStack Query mostraremos el nombre
-  const displayName = session ? getDisplayName(null, session.email) : ''
+  const displayName = session ? getDisplayName(profile?.nombre, session.email) : ''
 
   return (
-    <div>
-      <aside>
-        <h2>Hola, {displayName}</h2>
+    <div className="md:grid md:grid-cols-[14rem_1fr] md:gap-10">
+      {/* Menú lateral: solo desde tablet. En móvil se usa el menú del header */}
+      <aside className="hidden md:block">
+        <h2 className="mb-6 truncate text-lg font-extrabold uppercase tracking-wide">
+          Hola, {displayName}
+        </h2>
 
         <nav aria-label="Mi cuenta">
           <ul>
-            {accountLinks.map((link) => (
-              <li key={link.to}>
-                <NavLink to={link.to}>{link.label}</NavLink>
+            {accountLinks.map(({ to, label, icon: Icon }) => (
+              <li key={to}>
+                <NavLink
+                  to={to}
+                  className={({ isActive }) =>
+                    `${itemBase} ${isActive ? 'font-bold' : 'font-medium text-ink/80 hover:text-ink'}`
+                  }
+                >
+                  <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                  <span>{label}</span>
+                </NavLink>
               </li>
             ))}
             <li>
-              <button type="button" onClick={handleLogout}>
-                Cerrar sesión
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={`${itemBase} font-medium text-ink/80 hover:text-ink`}
+              >
+                <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
+                <span>Cerrar sesión</span>
               </button>
             </li>
           </ul>
@@ -43,7 +57,6 @@ function AccountLayout() {
       </aside>
 
       <div>
-        {/* Aquí se dibuja la sección seleccionada */}
         <Outlet />
       </div>
     </div>

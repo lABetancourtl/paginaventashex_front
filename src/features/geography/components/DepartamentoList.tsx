@@ -1,15 +1,14 @@
-import { useDepartamentos } from '../hooks/useDepartamentos';
+import { useDepartamentos } from '../hooks/useDepartamentos'
 
 function DepartamentoList() {
-  // Toda la lógica de carga está en el hook
-  const { departamentos, isLoading, error } = useDepartamentos()
+  const { data: departamentos, isPending, error } = useDepartamentos()
 
-  if (isLoading) {
-    return <p>Cargando departamentos...</p>;
+  if (isPending) {
+    return <p>Cargando departamentos...</p>
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <p>Error: {error.message}</p>
   }
 
   return (
@@ -19,11 +18,11 @@ function DepartamentoList() {
         {departamentos.map((dept) => (
           <li key={dept.codigo}>
             {dept.codigo} - {dept.nombre}
-            </li>
+          </li>
         ))}
       </ul>
     </div>
   )
 }
 
-export default DepartamentoList;
+export default DepartamentoList

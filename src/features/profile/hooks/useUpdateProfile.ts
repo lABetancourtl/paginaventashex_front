@@ -1,26 +1,13 @@
-import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { updateProfile } from '../services/profileService'
-import type { UpdateProfileRequest } from '../types'
+import { profileKeys } from '../queryKeys'
 
 export function useUpdateProfile() {
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
-  // Retorna true si se guardó correctamente
-  const save = async (request: UpdateProfileRequest): Promise<boolean> => {
-    setIsSaving(true)
-    setError(null)
-
-    try {
-      await updateProfile(request)
-      return true
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
-      return false
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  return { save, isSaving, error }
+  return useMutation({
+    mutationFn: updateProfile,
+    // Al guardar, el perfil en caché queda desactualizado: se vuelve a pedir
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKeys.all }),
+  })
 }

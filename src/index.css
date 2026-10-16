@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* ─── Tokens de diseño de PaginaVentasNet ─────────────────── */
+@theme {
+  --font-sans: "Montserrat Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #efefec;
+  --color-surface: #ffffff;
+  --color-line: #dcdcd6;
+  --color-ink: #363930;
+  --color-ink-muted: #76786e;
+  --color-primary: #3a3d31;
+  --color-primary-hover: #2a2c23;
+  --color-danger: #a8321e;
+}
+
+/* ─── Estilos base de toda la app ─────────────────────────── */
+@layer base {
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+
+  /* Contorno visible al navegar con teclado */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* En celular, mientras haya un modal abierto, la página de atrás no se desplaza.
+     En computador sí se permite, con el fondo desenfocado. */
+  @media (max-width: 767px) {
+    html:has(dialog[open]:modal) {
+      overflow: hidden;
+    }
+  }
+}

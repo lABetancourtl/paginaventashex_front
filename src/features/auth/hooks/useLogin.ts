@@ -3,18 +3,19 @@ import { loginWithPassword, sendOtp, verifyOtp } from '../services/authService'
 import { ApiRequestError } from '../../../api/client'
 import { useAuth } from './useAuth'
 
-// Código de error del backend cuando el usuario no tiene contraseña.
-// IMPORTANTE: verifica que coincida con el code real de tu backend.
 const PASSWORD_NOT_SET = 'NO_PASSWORD'
 
-type LoginMethod = 'otp' | 'password'
+// NUEVO: 'choose' es la pantalla inicial de elección
+type LoginMethod = 'choose' | 'otp' | 'password'
 type OtpStep = 'email' | 'code'
+export type OtpIntent = 'login' | 'register' | 'reset'
 
 export function useLogin() {
   const { login } = useAuth()
 
-  const [method, setMethod] = useState<LoginMethod>('otp')
+  const [method, setMethod] = useState<LoginMethod>('choose') // NUEVO
   const [step, setStep] = useState<OtpStep>('email')
+  const [otpIntent, setOtpIntent] = useState<OtpIntent>('login')
   const [email, setEmail] = useState('')
   const [otpSentAt, setOtpSentAt] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -37,7 +38,7 @@ export function useLogin() {
     }
   }
 
-  // ─── Flujo OTP ────────────────────────────────────────────
+  // ─── Flujo con código ─────────────────────────────────────
   const sendCode = async (emailToSend: string) => {
     setIsLoading(true)
     clearError()
@@ -45,7 +46,7 @@ export function useLogin() {
     try {
       await sendOtp({ email: emailToSend })
       setEmail(emailToSend)
-      setOtpSentAt(Date.now()) // Inicia los contadores
+      setOtpSentAt(Date.now())
       setStep('code')
     } catch (err) {
       handleError(err)
@@ -92,26 +93,48 @@ export function useLogin() {
     }
   }
 
-  // ─── Cambio de método ─────────────────────────────────────
+  // ─── Navegación entre pasos ───────────────────────────────
   const switchToPassword = () => {
     clearError()
     setMethod('password')
   }
 
-  // Puede recibir un email para dejarlo ya escrito en el formulario OTP
-  const switchToOtp = (prefillEmail?: string) => {
+  const switchToOtp = (prefillEmail?: string, intent: OtpIntent = 'login') => {
     clearError()
     setEmail(prefillEmail ?? '')
+    setOtpIntent(intent)
     setStep('email')
     setMethod('otp')
   }
 
-  // Estado derivado: ¿sugerimos usar OTP?
+  // NUEVO: retrocede un paso
+  const goBack = () => {
+    clearError()
+
+    // Del código, vuelve al email
+    if (method === 'otp' && step === 'code') {
+      setStep('email')
+      return
+    }
+
+    setStep('email')
+
+    // Si llegó al código desde "Regístrate" u "Olvidé mi contraseña",
+    // la flecha lo devuelve al formulario de contraseña
+    if (method === 'otp' && otpIntent !== 'login') {
+      setMethod('password')
+      return
+    }
+
+    setMethod('choose')
+  }
+
   const suggestOtp = method === 'password' && errorCode === PASSWORD_NOT_SET
 
   return {
     method,
     step,
+    otpIntent,
     email,
     otpSentAt,
     isLoading,
@@ -124,5 +147,6 @@ export function useLogin() {
     submitPassword,
     switchToPassword,
     switchToOtp,
+    goBack,
   }
 }

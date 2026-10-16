@@ -1,49 +1,40 @@
-import { Link, Outlet, useNavigate } from 'react-router'
+import { Link, Outlet } from 'react-router'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import LoginModal from '../features/auth/components/LoginModal'
+import UserMenu from '../features/account/components/UserMenu'
 
 function MainLayout() {
-  const { session, openLogin, logout } = useAuth()
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/') // Al cerrar sesión, vuelve al inicio
-  }
+  const { session } = useAuth()
 
   return (
-    <div>
-      <header>
-        <Link to="/">
-          <strong>PaginaVentasNet</strong>
-        </Link>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-30 border-b border-line bg-canvas">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 md:h-16">
+          <div className="flex items-center gap-10">
+            <Link to="/" className="text-sm font-extrabold uppercase tracking-wider md:text-base">
+              PaginaVentasNet
+            </Link>
 
-        <nav>
-          <Link to="/">Inicio</Link>
-          {session && <Link to="/cuenta/perfil">Mi cuenta</Link>}
-          {session?.rol === 'Admin' && <Link to="/admin">Administración</Link>}
-        </nav>
+          <nav aria-label="Principal" className="hidden items-center gap-6 md:flex">
+            <Link to="/" className="text-sm font-medium uppercase tracking-wide hover:text-ink-muted">
+              Inicio
+            </Link>
+            {session?.rol === 'Admin' && (
+              <Link to="/admin" className="text-sm font-medium uppercase tracking-wide hover:text-ink-muted">
+                Administración
+              </Link>
+            )}
+          </nav>
+      </div>
 
-        {session ? (
-          <div>
-            <span>{session.email}</span>
-            <button type="button" onClick={handleLogout}>
-              Cerrar sesión
-            </button>
-          </div>
-        ) : (
-          <button type="button" onClick={openLogin}>
-            Iniciar sesión
-          </button>
-        )}
+          <UserMenu />
+        </div>
       </header>
 
-      <main>
-        {/* Aquí se dibuja la página de la URL actual */}
+      <main className="mx-auto max-w-6xl px-4 py-6 md:py-10">
         <Outlet />
       </main>
 
-      {/* Un solo modal de login para todas las páginas */}
       <LoginModal />
     </div>
   )

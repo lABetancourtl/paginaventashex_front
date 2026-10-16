@@ -1,15 +1,14 @@
 import { useCategories } from '../hooks/useCategories'
 
 function CategoryList() {
-  // Toda la lógica de carga está en el hook
-  const { categories, isLoading, error } = useCategories()
+  const { data: categories, isPending, error } = useCategories()
 
-  if (isLoading) {
+  if (isPending) {
     return <p>Cargando categorías...</p>
   }
 
   if (error) {
-    return <p>Error: {error}</p>
+    return <p>Error: {error.message}</p>
   }
 
   return (

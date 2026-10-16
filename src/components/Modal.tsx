@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 interface ModalProps {
   isOpen: boolean
@@ -9,10 +10,8 @@ interface ModalProps {
 }
 
 function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
-  // Referencia al elemento <dialog> real del DOM
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  // Sincroniza el estado de React con el <dialog> del navegador
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -25,7 +24,6 @@ function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
     }
   }, [isOpen])
 
-  // Cerrar al hacer clic en el fondo oscuro (fuera del contenido)
   const handleClick = (e: MouseEvent<HTMLDialogElement>) => {
     if (e.target === e.currentTarget) {
       onClose()
@@ -38,14 +36,27 @@ function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
       onClose={onClose}
       onClick={handleClick}
       aria-label={ariaLabel}
-      style={{ padding: 0 }}
+      className={[
+        // Celular: pantalla completa
+        'm-0 h-full max-h-none w-full max-w-none bg-surface p-0 text-ink',
+        // Fondo claro y desenfocado detrás del modal
+        'backdrop:bg-surface/10 backdrop:backdrop-blur-md',
+        // Desde tablet: tarjeta centrada
+        'md:m-auto md:h-fit md:min-h-[26rem] md:max-w-3xl',
+        // Efecto vidrio: solo si el navegador soporta el desenfoque
+        'md:supports-[backdrop-filter]:bg-surface/75',
+      ].join(' ')}
     >
-      <div style={{ padding: '1.5rem' }}>
-        <button type="button" onClick={onClose} aria-label="Cerrar">
-          ✕
+      <div className="relative h-full overflow-y-auto px-6 pb-10 pt-3 md:h-auto md:px-10">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute right-3 top-3 p-2 text-ink-muted hover:text-ink"
+        >
+          <X size={22} strokeWidth={1.5} aria-hidden="true" />
         </button>
 
-        {/* El contenido solo existe mientras el modal está abierto */}
         {isOpen && children}
       </div>
     </dialog>

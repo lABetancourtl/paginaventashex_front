@@ -1,12 +1,9 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import FormField from '../../../components/FormField'
+import { inputClass, primaryButtonClass, readOnlyInputClass } from '../../../components/formStyles'
 import { GENERO_LABELS, GENERO_VALUES } from '../genero'
-import {
-  toUpdateRequest,
-  todayAsDateOnly,
-  validateProfileForm,
-} from '../profileForm'
+import { toUpdateRequest, todayAsDateOnly, validateProfileForm } from '../profileForm'
 import type { ProfileFormErrors, ProfileFormValues } from '../profileForm'
 import type { UpdateProfileRequest } from '../types'
 
@@ -17,20 +14,16 @@ interface ProfileFormProps {
   serverError: string | null
   onSubmit: (request: UpdateProfileRequest) => void
 }
-// Campos que solo aceptan dígitos
+
 const NUMERIC_FIELDS: (keyof ProfileFormValues)[] = ['documento', 'telefono']
 
 function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: ProfileFormProps) {
-  // Un solo estado con todos los campos
   const [values, setValues] = useState<ProfileFormValues>(initialValues)
   const [errors, setErrors] = useState<ProfileFormErrors>({})
   const [submitted, setSubmitted] = useState(false)
 
-  // Un solo manejador para todos los campos, gracias al atributo "name"
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-
-    // En los campos numéricos, eliminamos todo lo que no sea dígito
     const isNumeric = NUMERIC_FIELDS.includes(name as keyof ProfileFormValues)
     const cleanValue = isNumeric ? value.replace(/\D/g, '') : value
 
@@ -49,20 +42,22 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
     const validationErrors = validateProfileForm(values)
     setErrors(validationErrors)
 
-    // Si hay al menos un error, no se envía
     if (Object.keys(validationErrors).length > 0) return
 
     onSubmit(toUpdateRequest(values))
   }
 
-  // Atributos de accesibilidad para un campo según su error
   const ariaFor = (field: keyof ProfileFormValues) => ({
     'aria-invalid': errors[field] ? true : undefined,
     'aria-describedby': errors[field] ? `${field}-error` : undefined,
   })
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2"
+    >
       <FormField id="nombre" label="Nombre" required error={errors.nombre}>
         <input
           id="nombre"
@@ -74,6 +69,7 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           maxLength={100}
           aria-required="true"
           disabled={isSaving}
+          className={inputClass}
           {...ariaFor('nombre')}
         />
       </FormField>
@@ -89,6 +85,7 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           maxLength={100}
           aria-required="true"
           disabled={isSaving}
+          className={inputClass}
           {...ariaFor('apellido')}
         />
       </FormField>
@@ -100,6 +97,7 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           value={email}
           readOnly
           aria-describedby="email-hint"
+          className={readOnlyInputClass}
         />
       </FormField>
 
@@ -114,6 +112,7 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           maxLength={10}
           aria-required="true"
           disabled={isSaving}
+          className={inputClass}
           {...ariaFor('documento')}
         />
       </FormField>
@@ -130,6 +129,7 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           placeholder="Opcional"
           maxLength={10}
           disabled={isSaving}
+          className={inputClass}
           {...ariaFor('telefono')}
         />
       </FormField>
@@ -141,8 +141,11 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           value={values.genero}
           onChange={handleChange}
           disabled={isSaving}
+          className={inputClass}
         >
-          <option value="">Opcional</option>
+          <option value="" disabled hidden>
+            Selecciona una opción
+          </option>
           {GENERO_VALUES.map((genero) => (
             <option key={genero} value={genero}>
               {GENERO_LABELS[genero]}
@@ -162,15 +165,22 @@ function ProfileForm({ initialValues, email, isSaving, serverError, onSubmit }: 
           max={todayAsDateOnly()}
           autoComplete="bday"
           disabled={isSaving}
+          className={inputClass}
           {...ariaFor('fechaNacimiento')}
         />
       </FormField>
 
-      {serverError && <p role="alert">{serverError}</p>}
-
-      <button type="submit" disabled={isSaving}>
-        {isSaving ? 'Guardando...' : 'Guardar cambios'}
-      </button>
+      {/* El botón queda en la columna derecha, alineado abajo como en el diseño */}
+      <div className="flex flex-col justify-end gap-3">
+        {serverError && (
+          <p role="alert" className="text-sm text-danger">
+            {serverError}
+          </p>
+        )}
+        <button type="submit" disabled={isSaving} className={primaryButtonClass}>
+          {isSaving ? 'Guardando...' : 'Guardar cambios'}
+        </button>
+      </div>
     </form>
   )
 }

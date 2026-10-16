@@ -1,14 +1,18 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
+import FormField from '../../../components/FormField'
+import { inputClass, primaryButtonClass } from '../../../components/formStyles'
 
 interface EmailFormProps {
-  initialEmail?: string // NUEVO: opcional
+  initialEmail?: string
+  description: string 
   isLoading: boolean
   error: string | null
   onSubmit: (email: string) => void
 }
 
-function EmailForm({ initialEmail = '', isLoading, error, onSubmit }: EmailFormProps) {
+function EmailForm({ initialEmail = '', description, isLoading, error, onSubmit }: EmailFormProps) {
+  const emailId = useId()
   const [email, setEmail] = useState(initialEmail)
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -17,25 +21,31 @@ function EmailForm({ initialEmail = '', isLoading, error, onSubmit }: EmailFormP
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Iniciar sesión</h2>
-      <p>Te enviaremos un código de acceso a tu correo.</p>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <p className="text-center text-sm text-ink-muted">{description}</p>
 
-      <label htmlFor="email">Correo electrónico</label>
-      <input
-        id="email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="tu@correo.com"
-        autoComplete="email"
-        required
-        disabled={isLoading}
-      />
+      <FormField id={emailId} label="Correo electrónico">
+        <input
+          id={emailId}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="tu@correo.com"
+          autoComplete="email"
+          required
+          autoFocus
+          disabled={isLoading}
+          className={inputClass}
+        />
+      </FormField>
 
-      {error && <p>{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
 
-      <button type="submit" disabled={isLoading}>
+      <button type="submit" disabled={isLoading} className={primaryButtonClass}>
         {isLoading ? 'Enviando...' : 'Enviar código'}
       </button>
     </form>

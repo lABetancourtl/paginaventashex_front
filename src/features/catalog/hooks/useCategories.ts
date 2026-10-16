@@ -1,29 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { getCategories } from '../services/categoryService'
-import type { Category } from '../types'
+import { categoryKeys } from '../queryKeys'
 
-// Encapsula el estado de la petición de categorías
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getCategories()
-        setCategories(data)
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Error desconocido'
-        setError(message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    load()
-  }, [])
-
-  // Lo que el componente necesita saber
-  return { categories, isLoading, error }
+  return useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: getCategories,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  })
 }
