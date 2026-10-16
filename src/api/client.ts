@@ -134,3 +134,9 @@ export async function apiPost<T>(url: string, data?: unknown): Promise<T> {
   const response = await http.post<ApiResponse<T>>(url, data)
   return unwrap(response.data)
 }
+
+// ─── Helper para peticiones PUT ──────────────────────────────
+export async function apiPut<T>(url: string, data?: unknown): Promise<T> {
+  const response = await http.put<ApiResponse<T>>(url, data)
+  return unwrap(response.data)
+}

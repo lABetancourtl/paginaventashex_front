@@ -1,14 +1,30 @@
-import { useAuth } from '../features/auth/hooks/useAuth'
+import { Link } from 'react-router'
+import { useProfile } from '../features/profile/hooks/useProfile'
+import ProfileDetails from '../features/profile/components/ProfileDetails'
 
-// Provisional: en el siguiente paso mostrará los datos de GET /api/profile
 function ProfilePage() {
-  const { session } = useAuth()
+  const { profile, isLoading, error } = useProfile()
+
+  if (isLoading) {
+    return <p>Cargando tu perfil...</p>
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>
+  }
+
+  if (!profile) {
+    return null
+  }
 
   return (
     <section>
-      <h2>Mi perfil</h2>
-      <p>Correo: {session?.email}</p>
-      <p>Rol: {session?.rol}</p>
+      <div>
+        <h2>Perfil</h2>
+        <Link to="/cuenta/perfil/editar">Editar</Link>
+      </div>
+
+      <ProfileDetails profile={profile} />
     </section>
   )
 }

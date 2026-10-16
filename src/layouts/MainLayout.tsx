@@ -20,7 +20,7 @@ function MainLayout() {
 
         <nav>
           <Link to="/">Inicio</Link>
-          {session && <Link to="/perfil">Mi perfil</Link>}
+          {session && <Link to="/cuenta/perfil">Mi cuenta</Link>}
           {session?.rol === 'Admin' && <Link to="/admin">Administración</Link>}
         </nav>
 
