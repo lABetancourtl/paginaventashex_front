@@ -5,12 +5,12 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { useProfile } from '../../profile/hooks/useProfile'
 import { useDismiss } from '../../../hooks/useDismiss'
 import { getDisplayName } from '../../../utils/formatters'
+import { headerIconButtonClass, headerPanelClass } from '../../../layouts/headerStyles'
 import { accountLinks } from '../accountLinks'
 
-// Estilo compartido por las opciones del menú (enlaces y botón)
 const itemClass =
-  'flex w-full items-center gap-3 px-5 py-3 text-sm font-semibold uppercase tracking-wide hover:bg-canvas'
-
+  'flex w-full items-center gap-3 px-5 py-3.5 text-sm font-semibold uppercase tracking-wide hover:bg-white/10 focus-visible:outline-white'
+  
 function UserMenu() {
   const { session, openLogin, logout } = useAuth()
   const { data: profile } = useProfile()
@@ -29,7 +29,7 @@ function UserMenu() {
         type="button"
         onClick={openLogin}
         aria-label="Iniciar sesión"
-        className="rounded-full p-2 hover:bg-line/50"
+        className={headerIconButtonClass}
       >
         <User size={22} strokeWidth={1.5} aria-hidden="true" />
       </button>
@@ -46,33 +46,33 @@ function UserMenu() {
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-controls="user-menu"
-        className="flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 hover:bg-line/50"
+        className={`${headerIconButtonClass} md:w-auto md:gap-2 md:pl-2 md:pr-3`}
       >
         <CircleUserRound size={22} strokeWidth={1.5} aria-hidden="true" />
-        <span className="max-w-32 truncate text-sm md:max-w-44">Hola, {displayName}</span>
+        {/* Visible solo en computador; en celular lo leen los lectores de pantalla */}
+        <span className="sr-only text-sm md:not-sr-only md:max-w-44 md:truncate">
+          Hola, {displayName}
+        </span>
       </button>
 
       {isOpen && (
-        <div
-          id="user-menu"
-          className="absolute right-0 top-full mt-2 w-64 border border-line bg-surface py-2 shadow-lg"
-        >
+        <div id="user-menu" className={headerPanelClass}>
           <button
             type="button"
             onClick={close}
             aria-label="Cerrar menú"
-            className="absolute right-2 top-2 p-2 text-ink-muted hover:text-ink"
+            className="absolute right-2 top-2 p-2 text-white/70 hover:text-white focus-visible:outline-white"
           >
             <X size={18} aria-hidden="true" />
           </button>
 
-          <ul>
+          <ul className="py-2">
             {accountLinks.map(({ to, label, icon: Icon }) => (
               <li key={to}>
                 <Link to={to} onClick={close} className={itemClass}>
@@ -81,7 +81,7 @@ function UserMenu() {
                 </Link>
               </li>
             ))}
-            <li className="mt-1 border-t border-line pt-1">
+            <li>
               <button type="button" onClick={handleLogout} className={itemClass}>
                 <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
                 <span>Cerrar sesión</span>

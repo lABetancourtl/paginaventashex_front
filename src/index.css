@@ -12,10 +12,45 @@
   --color-primary: #3a3d31;
   --color-primary-hover: #2a2c23;
   --color-danger: #a8321e;
+  --color-header: #4a4e69;
+}
+
+/* ─── Efecto vidrio ───────────────────────────────────────── */
+
+/* Vidrio oscuro: para el header */
+@utility glass-dark {
+  /* Translucidez: el color del header al 65% */
+  background-color: color-mix(in oklab, var(--color-header) 65%, transparent);
+  /* Desenfoque fuerte y colores más vivos detrás del vidrio */
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  /* Línea de luz arriba + sombra suave abajo */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 10px 30px -15px rgb(0 0 0 / 0.5);
+}
+
+/* Vidrio claro: para los paneles desplegables */
+@utility glass-light {
+  background-color: color-mix(in oklab, var(--color-canvas) 75%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    0 16px 40px -20px rgb(0 0 0 / 0.35);
 }
 
 /* ─── Estilos base de toda la app ─────────────────────────── */
 @layer base {
+
+  /* Reserva siempre el espacio de la barra de scroll,
+  para que el contenido no salte al cambiar de página */
+  html {
+    scrollbar-gutter: stable;
+    /* Al desplazarse hacia un elemento, deja espacio para el header fijo */
+    scroll-padding-top: 3.5rem;
+  }
+
   body {
     @apply bg-canvas text-ink font-sans antialiased;
   }

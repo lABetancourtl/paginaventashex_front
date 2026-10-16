@@ -19,6 +19,7 @@ function HomePage() {
 
   return (
     <div>
+      
       <p>Productos en el carrito: {cartCount}</p>
 
       <CategoryList />
@@ -33,6 +34,7 @@ function HomePage() {
         />
       ))}
     </div>
+    
   )
 }
 

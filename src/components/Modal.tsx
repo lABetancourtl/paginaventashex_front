@@ -24,8 +24,19 @@ function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
     }
   }, [isOpen])
 
+  // Cierra solo si el clic fue en el fondo, fuera del rectángulo del modal
   const handleClick = (e: MouseEvent<HTMLDialogElement>) => {
-    if (e.target === e.currentTarget) {
+    // Los clics en botones, inputs o textos del modal nunca cierran
+    if (e.target !== e.currentTarget) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const isInside =
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom
+
+    if (!isInside) {
       onClose()
     }
   }
@@ -42,9 +53,9 @@ function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
         // Fondo claro y desenfocado detrás del modal
         'backdrop:bg-surface/10 backdrop:backdrop-blur-md',
         // Desde tablet: tarjeta centrada
-        'md:m-auto md:h-fit md:min-h-[26rem] md:max-w-3xl',
+        'md:m-auto md:h-fit md:min-h-[26rem] md:max-w-3xl md:border md:border-white/60',
         // Efecto vidrio: solo si el navegador soporta el desenfoque
-        'md:supports-[backdrop-filter]:bg-surface/75',
+        'md:supports-[backdrop-filter]:glass-light',
       ].join(' ')}
     >
       <div className="relative h-full overflow-y-auto px-6 pb-10 pt-3 md:h-auto md:px-10">
