@@ -1,18 +1,14 @@
-import type { Rol } from '../features/auth/types'
-
-interface NavLinkItem {
+export interface NavLinkItem {
   to: string
   label: string
 }
 
-// Enlaces de la navegación principal.
-// En el futuro: categorías principales (Hombre, Mujer, Ofertas...)
-export function getMainNavLinks(rol: Rol | undefined): NavLinkItem[] {
-  const links: NavLinkItem[] = [{ to: '/', label: 'Inicio' }]
-
-  if (rol === 'Admin') {
-    links.push({ to: '/admin', label: 'Administración' })
-  }
-
-  return links
-}
+// Categorías principales de la tienda.
+// En el futuro: obtenerlas de las categorías raíz del backend (por su slug)
+export const mainNavLinks: NavLinkItem[] = [
+  { to: '/categoria/nino', label: 'Niño' },
+  { to: '/categoria/nina', label: 'Niña' },
+  { to: '/categoria/accesorios', label: 'Accesorios' },
+  { to: '/categoria/basicos', label: 'Básicos' },
+  { to: '/categoria/sale', label: 'Sale' },
+]

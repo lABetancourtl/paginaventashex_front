@@ -11,6 +11,8 @@ import AdminPage from '../pages/AdminPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import AddressCreatePage from '../pages/AddressCreatePage'
 import AddressEditPage from '../pages/AddressEditPage'
+import AccountHomePage from '../pages/AccountHomePage'
+import CategoryPage from '../pages/CategoryPage'
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +20,7 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'categoria/:slug', element: <CategoryPage /> },
 
       // Rutas para cualquier usuario con sesión
       {
@@ -28,7 +31,7 @@ export const router = createBrowserRouter([
             element: <AccountLayout />,
             children: [
               // "/cuenta" sola redirige a "/cuenta/perfil"
-              { index: true, element: <Navigate to="perfil" replace /> },
+              { index: true, element: <AccountHomePage /> },
               { path: 'perfil', element: <ProfilePage /> },
               { path: 'perfil/editar', element: <ProfileEditPage /> },
               { path: 'direcciones', element: <AddressesPage /> },

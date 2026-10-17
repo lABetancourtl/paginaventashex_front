@@ -1,11 +1,13 @@
 import { useId, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import FormField from '../../../components/FormField'
+import SearchableSelect from '../../../components/SearchableSelect'
 import { inputClass, primaryButtonClass } from '../../../components/formStyles'
 import { useDepartamentos } from '../../geography/hooks/useDepartamentos'
 import { useMunicipios } from '../../geography/hooks/useMunicipios'
 import { toAddressRequest, validateAddressForm } from '../addressForm'
 import type { AddressFormErrors, AddressFormValues } from '../addressForm'
+import type { Departamento, Municipio } from '../../geography/types'
 import type { AddressRequest } from '../types'
 
 interface AddressFormProps {
@@ -24,13 +26,18 @@ function AddressForm({ initialValues, submitLabel, isSaving, serverError, onSubm
   const [errors, setErrors] = useState<AddressFormErrors>({})
   const [submitted, setSubmitted] = useState(false)
 
-  // ─── Datos para los selects ───────────────────────────────
+  // ─── Datos para los selectores ────────────────────────────
   const departamentos = useDepartamentos()
   const departamentoCodigo =
     values.departamentoCodigo === '' ? null : Number(values.departamentoCodigo)
   const municipios = useMunicipios(departamentoCodigo)
 
-  // Los demás campos aparecen cuando ya hay un municipio, como en el diseño
+  // El formulario guarda códigos; los selectores necesitan los objetos completos
+  const selectedDepartamento =
+    departamentos.data?.find((dept) => String(dept.codigo) === values.departamentoCodigo) ?? null
+  const selectedMunicipio =
+    municipios.data?.find((mun) => String(mun.codigo) === values.municipioCodigo) ?? null
+
   const showDetails = values.municipioCodigo !== ''
 
   // ─── Cambios ──────────────────────────────────────────────
@@ -41,14 +48,22 @@ function AddressForm({ initialValues, submitLabel, isSaving, serverError, onSubm
     }
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     updateValues({ ...values, [name]: value } as AddressFormValues)
   }
 
-  // Al cambiar de departamento, el municipio anterior ya no es válido
-  const handleDepartamentoChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    updateValues({ ...values, departamentoCodigo: e.target.value, municipioCodigo: '' })
+  const handleDepartamentoChange = (dept: Departamento | null) => {
+    const nextCodigo = dept ? String(dept.codigo) : ''
+
+    // Si eligió el mismo departamento, no reiniciamos el municipio
+    if (nextCodigo === values.departamentoCodigo) return
+
+    updateValues({ ...values, departamentoCodigo: nextCodigo, municipioCodigo: '' })
+  }
+
+  const handleMunicipioChange = (mun: Municipio | null) => {
+    updateValues({ ...values, municipioCodigo: mun ? String(mun.codigo) : '' })
   }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -67,10 +82,16 @@ function AddressForm({ initialValues, submitLabel, isSaving, serverError, onSubm
     'aria-describedby': errors[field] ? `${fieldId(field)}-error` : undefined,
   })
 
-  // ─── Texto del select de municipios según el estado ───────
-  let municipioPlaceholder = 'Municipio'
+  // ─── Textos de ayuda de los selectores ────────────────────
+  const departamentoPlaceholder = departamentos.isPending
+    ? 'Cargando departamentos...'
+    : 'Busca tu departamento'
+
+  let municipioPlaceholder = 'Busca tu municipio'
   if (departamentoCodigo === null) municipioPlaceholder = 'Elige primero un departamento'
   else if (municipios.isLoading) municipioPlaceholder = 'Cargando municipios...'
+
+  const municipioError = errors.municipioCodigo ?? municipios.error?.message
 
   return (
     <form
@@ -84,52 +105,42 @@ function AddressForm({ initialValues, submitLabel, isSaving, serverError, onSubm
         required
         error={errors.departamentoCodigo}
       >
-        <select
+        <SearchableSelect
           id={fieldId('departamentoCodigo')}
-          name="departamentoCodigo"
-          value={values.departamentoCodigo}
+          options={departamentos.data ?? []}
+          value={selectedDepartamento}
           onChange={handleDepartamentoChange}
+          getLabel={(dept) => dept.nombre}
+          getKey={(dept) => dept.codigo}
+          placeholder={departamentoPlaceholder}
+          emptyText="No encontramos ese departamento"
           disabled={isSaving || departamentos.isPending}
-          aria-required="true"
-          className={inputClass}
-          {...ariaFor('departamentoCodigo')}
-        >
-          <option value="" disabled hidden>
-            {departamentos.isPending ? 'Cargando departamentos...' : 'Departamento'}
-          </option>
-          {departamentos.data?.map((dept) => (
-            <option key={dept.codigo} value={dept.codigo}>
-              {dept.nombre}
-            </option>
-          ))}
-        </select>
+          invalid={Boolean(errors.departamentoCodigo)}
+          describedBy={
+            errors.departamentoCodigo ? `${fieldId('departamentoCodigo')}-error` : undefined
+          }
+        />
       </FormField>
 
       <FormField
         id={fieldId('municipioCodigo')}
         label="Municipio"
         required
-        error={errors.municipioCodigo ?? municipios.error?.message}
+        error={municipioError}
       >
-        <select
+        <SearchableSelect
           id={fieldId('municipioCodigo')}
-          name="municipioCodigo"
-          value={values.municipioCodigo}
-          onChange={handleChange}
+          options={municipios.data ?? []}
+          value={selectedMunicipio}
+          onChange={handleMunicipioChange}
+          getLabel={(mun) => mun.nombre}
+          getKey={(mun) => mun.codigo}
+          placeholder={municipioPlaceholder}
+          emptyText="No encontramos ese municipio"
           disabled={isSaving || departamentoCodigo === null || municipios.isLoading}
-          aria-required="true"
-          className={inputClass}
-          {...ariaFor('municipioCodigo')}
-        >
-          <option value="" disabled hidden>
-            {municipioPlaceholder}
-          </option>
-          {municipios.data?.map((mun) => (
-            <option key={mun.codigo} value={mun.codigo}>
-              {mun.nombre}
-            </option>
-          ))}
-        </select>
+          invalid={Boolean(municipioError)}
+          describedBy={municipioError ? `${fieldId('municipioCodigo')}-error` : undefined}
+        />
       </FormField>
 
       {showDetails && (
@@ -211,7 +222,6 @@ function AddressForm({ initialValues, submitLabel, isSaving, serverError, onSubm
         </>
       )}
 
-      {/* El botón siempre en la columna derecha, como en el diseño */}
       <div className="flex flex-col gap-3 sm:col-start-2">
         {serverError && (
           <p role="alert" className="text-sm text-danger">

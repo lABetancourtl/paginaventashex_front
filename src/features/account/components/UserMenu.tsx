@@ -6,7 +6,7 @@ import { useProfile } from '../../profile/hooks/useProfile'
 import { useDismiss } from '../../../hooks/useDismiss'
 import { getDisplayName } from '../../../utils/formatters'
 import { headerIconButtonClass, headerPanelClass } from '../../../layouts/headerStyles'
-import { accountLinks } from '../accountLinks'
+import { getAccountLinks } from '../accountLinks'
 
 const itemClass =
   'flex w-full items-center gap-3 px-5 py-3.5 text-sm font-semibold uppercase tracking-wide hover:bg-white/10 focus-visible:outline-white'
@@ -46,7 +46,18 @@ function UserMenu() {
   }
 
   return (
-    <div ref={containerRef}>
+    <>
+      {/* Celular: el ícono lleva a la página de la cuenta */}
+      <Link
+        to="/cuenta"
+        aria-label={`Mi cuenta. Hola, ${displayName}`}
+        className={`${headerIconButtonClass} md:hidden`}
+      >
+        <CircleUserRound size={20} strokeWidth={1.5} aria-hidden="true" />
+      </Link>
+
+      {/* Computador: el ícono abre el menú desplegable */}
+      <div ref={containerRef} className="hidden md:block">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -73,7 +84,7 @@ function UserMenu() {
           </button>
 
           <ul className="py-2">
-            {accountLinks.map(({ to, label, icon: Icon }) => (
+            {getAccountLinks(session.rol).map(({ to, label, icon: Icon }) => (
               <li key={to}>
                 <Link to={to} onClick={close} className={itemClass}>
                   <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
@@ -91,6 +102,7 @@ function UserMenu() {
         </div>
       )}
     </div>
+    </>
   )
 }
 

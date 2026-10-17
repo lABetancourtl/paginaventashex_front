@@ -8,6 +8,7 @@ import { useProfile } from '../features/profile/hooks/useProfile'
 import { useSetPassword } from '../features/profile/hooks/useSetPassword'
 import NewPasswordForm from '../features/profile/components/NewPasswordForm'
 import type { SetPasswordRequest } from '../features/profile/types'
+import AccountSectionHeader from '../features/account/components/AccountSectionHeader'
 
 type Mode = 'view' | 'set' | 'change'
 
@@ -109,7 +110,7 @@ function AuthenticationPage() {
   // ─── Vista ────────────────────────────────────────────────
   return (
     <section>
-      <h2 className="mb-4 text-lg font-extrabold uppercase tracking-wide">Autenticación</h2>
+      <AccountSectionHeader title="Autenticación" desktopTitle />
 
       <div className="border border-line p-6 md:p-10">
         <h3 className="font-semibold">Contraseña</h3>

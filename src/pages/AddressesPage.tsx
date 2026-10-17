@@ -3,6 +3,7 @@ import { useAddresses } from '../features/addresses/hooks/useAddresses'
 import { useSetPrincipalAddress } from '../features/addresses/hooks/useAddressMutations'
 import AddressCard from '../features/addresses/components/AddressCard'
 import { primaryButtonClass } from '../components/formStyles'
+import AccountSectionHeader from '../features/account/components/AccountSectionHeader'
 
 function AddressesPage() {
   const { data: addresses, isPending, error } = useAddresses()
@@ -48,7 +49,7 @@ function AddressesPage() {
 
   return (
     <section>
-      <h2 className="sr-only">Direcciones</h2>
+      <AccountSectionHeader title="Direcciones" />
 
       <Link
         to="/cuenta/direcciones/nueva"

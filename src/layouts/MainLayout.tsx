@@ -1,15 +1,12 @@
 import { Link, Outlet } from 'react-router'
 import { Search, ShoppingBag } from 'lucide-react'
-import { useAuth } from '../features/auth/hooks/useAuth'
 import LoginModal from '../features/auth/components/LoginModal'
 import UserMenu from '../features/account/components/UserMenu'
 import MobileNav from './MobileNav'
-import { getMainNavLinks } from './mainNavLinks'
+import { mainNavLinks } from './mainNavLinks'
 import { headerIconButtonClass, headerNavLinkClass } from './headerStyles'
 
 function MainLayout() {
-  const { session } = useAuth()
-  const links = getMainNavLinks(session?.rol)
 
   return (
         // pt-14: espacio arriba del contenido, igual a la altura del header fijo
@@ -21,7 +18,7 @@ function MainLayout() {
 
           {/* Computador: navegación a la izquierda, ocupando la mitad del espacio libre */}
           <nav aria-label="Principal" className="hidden md:flex md:flex-1 md:items-center md:gap-7">
-            {links.map((link) => (
+            {mainNavLinks.map((link) => (
               <Link key={link.to} to={link.to} className={headerNavLinkClass}>
                 {link.label}
               </Link>
