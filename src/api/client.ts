@@ -140,3 +140,15 @@ export async function apiPut<T>(url: string, data?: unknown): Promise<T> {
   const response = await http.put<ApiResponse<T>>(url, data)
   return unwrap(response.data)
 }
+
+// ─── Helper para peticiones PATCH ────────────────────────────
+export async function apiPatch<T>(url: string, data?: unknown): Promise<T> {
+  const response = await http.patch<ApiResponse<T>>(url, data)
+  return unwrap(response.data)
+}
+
+// ─── Helper para peticiones DELETE ───────────────────────────
+export async function apiDelete<T>(url: string): Promise<T> {
+  const response = await http.delete<ApiResponse<T>>(url)
+  return unwrap(response.data)
+}

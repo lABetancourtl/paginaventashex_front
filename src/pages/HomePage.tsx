@@ -19,7 +19,8 @@ function HomePage() {
 
   return (
     <div>
-      
+            {/* TEMPORAL: para probar el efecto vidrio */}
+      <div className="mb-6 h-64 bg-linear-to-r from-rose-400 via-amber-300 to-emerald-400" />
       <p>Productos en el carrito: {cartCount}</p>
 
       <CategoryList />

@@ -2,14 +2,37 @@ import { useEffect, useRef } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 import { X } from 'lucide-react'
 
+type ModalSize = 'default' | 'small'
+
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
   ariaLabel: string
+  size?: ModalSize
   children: ReactNode
 }
 
-function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
+// Clases del <dialog> según el tamaño
+const dialogSizeClasses: Record<ModalSize, string> = {
+  // Celular: pantalla completa · Computador: tarjeta grande centrada
+  default: [
+    'm-0 h-full max-h-none w-full max-w-none',
+    'md:m-auto md:h-fit md:min-h-[26rem] md:max-w-3xl md:border md:border-white/60',
+    'md:supports-[backdrop-filter]:glass-light',
+  ].join(' '),
+  // Siempre una tarjeta pequeña centrada
+  small: [
+    'm-auto h-fit w-[calc(100%-2rem)] max-w-md border border-white/60',
+    'supports-[backdrop-filter]:glass-light',
+  ].join(' '),
+}
+
+const contentSizeClasses: Record<ModalSize, string> = {
+  default: 'h-full overflow-y-auto px-6 pb-10 pt-3 md:h-auto md:px-10',
+  small: 'px-6 pb-6 pt-3',
+}
+
+function Modal({ isOpen, onClose, ariaLabel, size = 'default', children }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -24,9 +47,7 @@ function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
     }
   }, [isOpen])
 
-  // Cierra solo si el clic fue en el fondo, fuera del rectángulo del modal
   const handleClick = (e: MouseEvent<HTMLDialogElement>) => {
-    // Los clics en botones, inputs o textos del modal nunca cierran
     if (e.target !== e.currentTarget) return
 
     const rect = e.currentTarget.getBoundingClientRect()
@@ -48,17 +69,12 @@ function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
       onClick={handleClick}
       aria-label={ariaLabel}
       className={[
-        // Celular: pantalla completa
-        'm-0 h-full max-h-none w-full max-w-none bg-surface p-0 text-ink',
-        // Fondo claro y desenfocado detrás del modal
-        'backdrop:bg-surface/10 backdrop:backdrop-blur-md',
-        // Desde tablet: tarjeta centrada
-        'md:m-auto md:h-fit md:min-h-[26rem] md:max-w-3xl md:border md:border-white/60',
-        // Efecto vidrio: solo si el navegador soporta el desenfoque
-        'md:supports-[backdrop-filter]:glass-light',
+        'bg-surface p-0 text-ink',
+        'backdrop:bg-surface/40 backdrop:backdrop-blur-md',
+        dialogSizeClasses[size],
       ].join(' ')}
     >
-      <div className="relative h-full overflow-y-auto px-6 pb-10 pt-3 md:h-auto md:px-10">
+      <div className={`relative ${contentSizeClasses[size]}`}>
         <button
           type="button"
           onClick={onClose}

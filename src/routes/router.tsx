@@ -9,6 +9,8 @@ import AddressesPage from '../pages/AddressesPage'
 import AuthenticationPage from '../pages/AuthenticationPage'
 import AdminPage from '../pages/AdminPage'
 import NotFoundPage from '../pages/NotFoundPage'
+import AddressCreatePage from '../pages/AddressCreatePage'
+import AddressEditPage from '../pages/AddressEditPage'
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +32,8 @@ export const router = createBrowserRouter([
               { path: 'perfil', element: <ProfilePage /> },
               { path: 'perfil/editar', element: <ProfileEditPage /> },
               { path: 'direcciones', element: <AddressesPage /> },
+              { path: 'direcciones/nueva', element: <AddressCreatePage /> },
+              { path: 'direcciones/:id/editar', element: <AddressEditPage /> },
               { path: 'autenticacion', element: <AuthenticationPage /> },
             ],
           },

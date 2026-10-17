@@ -33,3 +33,17 @@ export const linkButtonClass = [
   'hover:text-ink-muted',
   'disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60',
 ].join(' ')
+
+// Acción destructiva con borde (ej: "Eliminar dirección")
+export const dangerButtonClass = [
+  'w-full border border-danger px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-danger',
+  'hover:bg-danger hover:text-white',
+  'disabled:cursor-not-allowed disabled:opacity-60',
+].join(' ')
+
+// Confirmación de una acción destructiva (fondo rojo)
+export const dangerSolidButtonClass = [
+  'w-full bg-danger px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white',
+  'hover:bg-danger/90',
+  'disabled:cursor-not-allowed disabled:opacity-60',
+].join(' ')
