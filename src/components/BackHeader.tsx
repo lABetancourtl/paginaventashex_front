@@ -1,18 +1,31 @@
 import { Link } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
 
-interface BackHeaderProps {
+// O lleva a una ruta (backTo), o ejecuta una acción (onBack). Nunca ambas.
+type BackHeaderProps = {
   title: string
-  backTo: string
-  backLabel: string // Para lectores de pantalla, ej: "Volver a direcciones"
-}
+  backLabel: string
+} & (
+  | { backTo: string; onBack?: never }
+  | { onBack: () => void; backTo?: never }
+)
 
-function BackHeader({ title, backTo, backLabel }: BackHeaderProps) {
+const backClass = 'p-1 hover:text-ink-muted'
+
+function BackHeader({ title, backLabel, backTo, onBack }: BackHeaderProps) {
+  const icon = <ArrowLeft size={20} strokeWidth={1.5} aria-hidden="true" />
+
   return (
     <div className="mb-4 flex items-center gap-3">
-      <Link to={backTo} aria-label={backLabel} className="p-1 hover:text-ink-muted">
-        <ArrowLeft size={20} strokeWidth={1.5} aria-hidden="true" />
-      </Link>
+      {backTo !== undefined ? (
+        <Link to={backTo} aria-label={backLabel} className={backClass}>
+          {icon}
+        </Link>
+      ) : (
+        <button type="button" onClick={onBack} aria-label={backLabel} className={backClass}>
+          {icon}
+        </button>
+      )}
       <h2 className="text-lg font-extrabold uppercase tracking-wide">{title}</h2>
     </div>
   )

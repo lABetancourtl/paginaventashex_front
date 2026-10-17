@@ -27,3 +27,9 @@ export interface UpdateProfileRequest {
   fechaNacimiento: string | null
   telefono: string | null
 }
+
+// Body de PUT /api/profile/password
+export interface SetPasswordRequest {
+  otpCode: string
+  newPassword: string
+}
