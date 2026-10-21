@@ -13,6 +13,7 @@ import AddressCreatePage from '../pages/AddressCreatePage'
 import AddressEditPage from '../pages/AddressEditPage'
 import AccountHomePage from '../pages/AccountHomePage'
 import CategoryPage from '../pages/CategoryPage'
+import ProductDetailPage from '../pages/ProductDetailPage'
 
 export const router = createBrowserRouter([
   {
@@ -20,7 +21,8 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'categoria/:slug', element: <CategoryPage /> },
+      { path: 'categoria/:slug', element: <CategoryPage />, handle: { fullWidth: true } },
+      { path: 'producto/:id', element: <ProductDetailPage /> },
 
       // Rutas para cualquier usuario con sesión
       {

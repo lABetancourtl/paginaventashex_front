@@ -23,3 +23,14 @@ export function getDisplayName(nombre: string | null | undefined, email: string)
   }
   return email.split('@')[0]
 }
+
+const copFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  maximumFractionDigits: 0,
+})
+
+// 32000 → "$ 32.000"
+export function formatCOP(value: number): string {
+  return copFormatter.format(value)
+}

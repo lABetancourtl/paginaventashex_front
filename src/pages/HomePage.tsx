@@ -1,41 +1,10 @@
-import { useState } from 'react'
-import ProductCard from '../features/catalog/components/ProductCard'
-import CategoryList from '../features/catalog/components/CategoryList'
-import DepartamentoList from '../features/geography/components/DepartamentoList'
-
-// Productos de prueba: los reemplazaremos con el catálogo real
-const products = [
-  { id: 1, name: 'Audífonos Bluetooth', price: 150000 },
-  { id: 2, name: 'Mouse inalámbrico', price: 45000 },
-  { id: 3, name: 'Teclado mecánico', price: 280000 },
-]
-
+// Provisional: aquí irán las secciones de publicidad y productos destacados
 function HomePage() {
-  const [cartCount, setCartCount] = useState(0)
-
-  const handleAddToCart = (quantity: number) => {
-    setCartCount(cartCount + quantity)
-  }
-
   return (
-    <div>
-            {/* TEMPORAL: para probar el efecto vidrio */}
-      <div className="mb-6 h-64 bg-linear-to-r from-rose-400 via-amber-300 to-emerald-400" />
-      <p>Productos en el carrito: {cartCount}</p>
-
-      <CategoryList />
-      <DepartamentoList />
-
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          name={product.name}
-          price={product.price}
-          onAddToCart={handleAddToCart}
-        />
-      ))}
-    </div>
-    
+    <section className="py-16 text-center">
+      <h2 className="text-2xl font-extrabold uppercase tracking-wide">Tisoro</h2>
+      <p className="mt-3 text-ink-muted">Elige una categoría en el menú para ver los productos.</p>
+    </section>
   )
 }
 

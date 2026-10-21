@@ -12,3 +12,11 @@ export interface ApiResponse<T> {
   data: T | null
   error: ApiError | null
 }
+
+// Respuesta paginada genérica del backend
+export interface PagedResult<T> {
+  items: T[]
+  totalItems: number
+  page: number
+  totalPages: number
+}
