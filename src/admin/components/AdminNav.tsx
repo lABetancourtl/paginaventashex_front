@@ -3,11 +3,11 @@ import { LogOut, Store } from 'lucide-react'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { adminLinks } from '../adminLinks'
 
-const itemBase =
-  'flex w-full items-center gap-3 px-3 py-2.5 text-sm focus-visible:outline-white'
+const itemBase = 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors'
+const inactiveClass = 'text-ink-muted hover:bg-card/70 hover:text-ink'
 
 interface AdminNavProps {
-  onNavigate?: () => void // Para cerrar el menú del celular al elegir una opción
+  onNavigate?: () => void
 }
 
 function AdminNav({ onNavigate }: AdminNavProps) {
@@ -29,11 +29,7 @@ function AdminNav({ onNavigate }: AdminNavProps) {
                 end={end}
                 onClick={onNavigate}
                 className={({ isActive }) =>
-                  `${itemBase} ${
-                    isActive
-                      ? 'bg-white/10 font-bold text-white'
-                      : 'text-white/75 hover:bg-white/5 hover:text-white'
-                  }`
+                  `${itemBase} ${isActive ? 'bg-card font-semibold text-ink shadow-sm' : inactiveClass}`
                 }
               >
                 <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
@@ -44,26 +40,16 @@ function AdminNav({ onNavigate }: AdminNavProps) {
         </ul>
       </nav>
 
-      <div className="space-y-1 border-t border-white/10 px-3 py-4">
-        <Link
-          to="/"
-          onClick={onNavigate}
-          className={`${itemBase} text-white/75 hover:bg-white/5 hover:text-white`}
-        >
+      <div className="space-y-1 px-3 py-4">
+        <Link to="/" onClick={onNavigate} className={`${itemBase} ${inactiveClass}`}>
           <Store size={18} strokeWidth={1.5} aria-hidden="true" />
           Ver tienda
         </Link>
-
-        <p className="truncate px-3 pt-3 text-xs text-white/60">{session?.email}</p>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className={`${itemBase} text-white/75 hover:bg-white/5 hover:text-white`}
-        >
+        <button type="button" onClick={handleLogout} className={`${itemBase} ${inactiveClass}`}>
           <LogOut size={18} strokeWidth={1.5} aria-hidden="true" />
           Cerrar sesión
         </button>
+        <p className="truncate px-3 pt-2 text-xs text-ink-muted">{session?.email}</p>
       </div>
     </div>
   )

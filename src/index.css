@@ -17,6 +17,9 @@
   --color-footer: color-mix(in oklab, var(--color-header) 75%, black);
   --color-sale: #b5d334;   
   --color-sale-ink: #55701a;  
+
+  /* Panel de administración */
+    --color-card: #ffffff; /* Tarjetas del panel de administración */
 }
 
 /* ─── Efecto vidrio ───────────────────────────────────────── */

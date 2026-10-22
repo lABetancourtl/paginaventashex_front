@@ -11,7 +11,7 @@ function AdminLayout() {
         <AdminSidebar />
         <AdminMobileBar />
 
-        <main className="px-4 py-6 md:px-10 md:py-10">
+        <main className="px-4 py-6 md:py-8 md:pl-4 md:pr-8">
           {/* Cada página del panel también se carga de forma diferida */}
           <Suspense fallback={<p className="text-sm text-ink-muted">Cargando...</p>}>
             <Outlet />

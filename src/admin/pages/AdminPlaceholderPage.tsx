@@ -1,4 +1,6 @@
 import { SITE_NAME } from '../../config/site'
+import AdminPageHeader from '../components/AdminPageHeader'
+import AdminCard from '../components/AdminCard'
 
 interface AdminPlaceholderPageProps {
   title: string
@@ -7,11 +9,13 @@ interface AdminPlaceholderPageProps {
 // Provisional: cada sección se reemplazará por su página real
 function AdminPlaceholderPage({ title }: AdminPlaceholderPageProps) {
   return (
-    <section>
+    <>
       <title>{`${title} | Admin ${SITE_NAME}`}</title>
-      <h1 className="text-xl font-extrabold uppercase tracking-wide">{title}</h1>
-      <p className="mt-4 text-sm text-ink-muted">Esta sección está en construcción.</p>
-    </section>
+      <AdminPageHeader title={title} />
+      <AdminCard>
+        <p className="text-sm text-ink-muted">Esta sección está en construcción.</p>
+      </AdminCard>
+    </>
   )
 }
 

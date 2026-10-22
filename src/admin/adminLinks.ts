@@ -12,8 +12,8 @@ export interface AdminLink {
 export const adminLinks: AdminLink[] = [
   {
     to: '/admin',
-    label: 'Inicio',
-    description: 'Resumen del panel.',
+    label: 'Dashboard',
+    description: 'Resumen de la tienda.',
     icon: LayoutDashboard,
     end: true,
   },
