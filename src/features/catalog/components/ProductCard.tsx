@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { ImageOff } from 'lucide-react'
 import { cloudinarySrcSet, cloudinaryUrl } from '../../../utils/cloudinary'
-import { formatCOP } from '../../../utils/formatters'
+import ProductPrice from './ProductPrice'
 import type { Product } from '../types'
 
 // Anchos disponibles y cuánto ocupa la imagen en pantalla:
@@ -23,7 +23,7 @@ function ProductImage({ url, alt }: ProductImageProps) {
       alt={alt}
       loading="lazy"
       decoding="async"
-      className="size-full object-contain"
+      className="size-full object-contain object-bottom"
     />
   )
 }
@@ -39,7 +39,7 @@ function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="group">
       <Link to={`/producto/${product.id}`} className="block">
-        <div className="relative aspect-[2/3] overflow-hidden bg-surface">
+        <div className="relative aspect-[5/6] overflow-hidden md:aspect-[9/10]">
           {mainUrl && hoverUrl ? (
             // Dos imágenes: carrusel en celular, cambio al pasar el mouse en computador
             <div className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:block md:overflow-hidden">
@@ -70,17 +70,13 @@ function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </h3>
 
-        <p className="mt-1 flex flex-wrap items-baseline gap-x-2 px-1 text-xs">
-          <span className={hasDiscount ? 'font-bold text-sale-ink' : undefined}>
-            {formatCOP(product.finalPrice)}
-          </span>
-          {hasDiscount && (
-            <span className="text-ink-muted line-through">
-              <span className="sr-only">Antes </span>
-              {formatCOP(product.price)}
-            </span>
-          )}
-        </p>
+        <div className="mt-1 px-1">
+          <ProductPrice
+            price={product.price}
+            finalPrice={product.finalPrice}
+            discountPercent={product.discountPercent}
+          />
+        </div>
       </Link>
     </article>
   )

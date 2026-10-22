@@ -11,6 +11,7 @@ import SaleNavItem from '../features/catalog/components/SaleNavItem'
 import { useIsSaleView } from '../features/catalog/hooks/useIsSaleView'
 import { categoryPath } from '../features/catalog/catalogNav'
 import type { RouteHandle } from '../routes/routeHandle'
+import Footer from './Footer'
 
 function MainLayout() {
   const { slug } = useParams()
@@ -28,7 +29,7 @@ function MainLayout() {
   const activeRootId = categories ? findCategoryContext(categories, slug)?.root.id : undefined
   
   return (
-    <div className="min-h-screen pt-14">
+    <div className="flex min-h-screen flex-col pt-14">
       <header className="fixed inset-x-0 top-0 z-30 border-b border-white/10 text-white glass-dark">
         <div className="flex h-14 items-center gap-1 px-2 md:gap-2 md:px-6">
           <MobileNav />
@@ -89,10 +90,15 @@ function MainLayout() {
       {/* Subcategorías: solo dentro de una categoría */}
       <CategorySubnav />
 
-            <main className={isFullWidth ? 'px-1 pb-10 pt-4 md:px-2' : 'mx-auto max-w-6xl px-4 py-6 md:py-10'}>
+      <main
+        className={`w-full flex-1 ${
+                    isFullWidth ? 'pt-4' : 'mx-auto max-w-6xl px-4 py-6 md:py-10'
+        }`}
+      >
         <Outlet />
       </main>
       
+      <Footer />
       <ScrollRestoration />
       <LoginModal />
     </div>

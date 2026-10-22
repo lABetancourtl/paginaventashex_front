@@ -7,13 +7,18 @@ import ProfilePage from '../pages/ProfilePage'
 import ProfileEditPage from '../pages/ProfileEditPage'
 import AddressesPage from '../pages/AddressesPage'
 import AuthenticationPage from '../pages/AuthenticationPage'
-import AdminPage from '../pages/AdminPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import AddressCreatePage from '../pages/AddressCreatePage'
 import AddressEditPage from '../pages/AddressEditPage'
 import AccountHomePage from '../pages/AccountHomePage'
 import CategoryPage from '../pages/CategoryPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
+import { lazy, Suspense } from 'react'
+
+// ─── Panel de administración: se descarga solo al entrar a /admin ───
+const AdminLayout = lazy(() => import('../admin/layouts/AdminLayout'))
+const AdminHomePage = lazy(() => import('../admin/pages/AdminHomePage'))
+const AdminPlaceholderPage = lazy(() => import('../admin/pages/AdminPlaceholderPage'))
 
 export const router = createBrowserRouter([
   {
@@ -22,7 +27,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'categoria/:slug', element: <CategoryPage />, handle: { fullWidth: true } },
-      { path: 'producto/:id', element: <ProductDetailPage /> },
+      { path: 'producto/:id', element: <ProductDetailPage />, handle: { fullWidth: true } },
 
       // Rutas para cualquier usuario con sesión
       {
@@ -45,15 +50,23 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // Rutas solo para Admin
-      {
-        element: <RequireAuth role="Admin" />,
-        children: [
-          { path: 'admin', element: <AdminPage /> },
-        ],
-      },
-
       { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  
+  // ─── Panel de administración: fuera del layout de la tienda ───
+  {
+    path: '/admin',
+    element: (
+      <Suspense fallback={<p className="p-6 text-sm text-ink-muted">Cargando panel...</p>}>
+        <AdminLayout />
+      </Suspense>
+    ),
+    children: [
+      { index: true, element: <AdminHomePage /> },
+      { path: 'productos', element: <AdminPlaceholderPage title="Productos" /> },
+      { path: 'categorias', element: <AdminPlaceholderPage title="Categorías" /> },
+      { path: 'pedidos', element: <AdminPlaceholderPage title="Pedidos" /> },
     ],
   },
 ])

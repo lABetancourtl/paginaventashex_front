@@ -101,7 +101,7 @@ function CategoryPage() {
   const totalItems = products.data?.totalItems
 
   return (
-    <section>
+    <section className="px-1 pb-12 md:px-2">
       <div className="mb-6 px-2 md:px-4">
         <p className="text-xs uppercase tracking-wide text-ink-muted">
           {isSaleView ? (

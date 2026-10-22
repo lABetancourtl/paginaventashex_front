@@ -7,6 +7,6 @@ export const categoryKeys = {
 
 export const productKeys = {
   all: ['products'] as const,
-  // Cada combinación de filtros es una entrada distinta en la caché
   search: (params: ProductSearchParams) => ['products', 'search', params] as const,
+  detail: (id: number) => ['products', 'detail', id] as const,
 }

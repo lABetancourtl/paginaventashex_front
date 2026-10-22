@@ -3,10 +3,10 @@
 /* ─── Tokens de diseño de PaginaVentasNet ─────────────────── */
 @theme {
   --font-sans: "Montserrat Variable", ui-sans-serif, system-ui, sans-serif;
-
-  /* --color-canvas: #efefec; */
-  --color-canvas: #ffffff;
-  --color-surface: #ffffff;
+/* efefec */
+  --color-canvas: #efefec;
+  /* --color-canvas: #ffffff; */
+  --color-surface: var(--color-canvas);
   --color-line: #dcdcd6;
   --color-ink: #363930;
   --color-ink-muted: #76786e;
@@ -14,6 +14,7 @@
   --color-primary-hover: #2a2c23;
   --color-danger: #a8321e;
   --color-header: #355C5D;
+  --color-footer: color-mix(in oklab, var(--color-header) 75%, black);
   --color-sale: #b5d334;   
   --color-sale-ink: #55701a;  
 }

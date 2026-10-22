@@ -9,3 +9,7 @@ export function searchProducts(params: ProductSearchParams): Promise<PagedResult
     onSale: params.onSale ? true : undefined,
   })
 }
+
+export function getProductById(id: number): Promise<Product> {
+  return apiGet<Product>(`/products/${id}`)
+}

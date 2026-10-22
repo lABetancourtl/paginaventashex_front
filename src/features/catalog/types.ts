@@ -17,6 +17,14 @@ export interface CategoryTreeNode {
   children: CategoryTreeNode[]
 }
 
+// Imagen o video de la galería de un producto
+export interface ProductMedia {
+  id: number
+  url: string
+  mediaType: string // 'Image' por ahora; confirmar si existen otros tipos
+  displayOrder: number
+}
+
 // Producto tal como lo retorna GET /api/products/search
 export interface Product {
   id: number
@@ -30,7 +38,7 @@ export interface Product {
   categoryName: string
   catalogMainUrl: string | null
   catalogHoverUrl: string | null
-  media: unknown[] // Lo tiparemos con el detalle del producto
+  media: ProductMedia[]
   createdAtUtc: string
   discountPercent: number | null
   finalPrice: number

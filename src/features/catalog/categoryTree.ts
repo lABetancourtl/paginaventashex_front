@@ -33,3 +33,22 @@ export function findCategoryContext(
 
   return null
 }
+
+// Igual que findCategoryContext, pero buscando por id
+export function findCategoryContextById(
+  tree: CategoryTreeNode[],
+  id: number,
+): CategoryContext | null {
+  for (const root of tree) {
+    if (root.id === id) {
+      return { root, current: root }
+    }
+
+    const child = root.children.find((node) => node.id === id)
+    if (child) {
+      return { root, current: child }
+    }
+  }
+
+  return null
+}
