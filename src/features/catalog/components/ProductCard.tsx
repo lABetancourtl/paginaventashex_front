@@ -43,7 +43,7 @@ function ProductCard({ product }: ProductCardProps) {
           {mainUrl && hoverUrl ? (
             // Dos imágenes: carrusel en celular, cambio al pasar el mouse en computador
             <div className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:block md:overflow-hidden">
-              <div className="size-full shrink-0 snap-start md:absolute md:inset-0">
+              <div className="size-full shrink-0 snap-start md:absolute md:inset-0 md:transition-opacity md:duration-300 md:group-hover:opacity-0">
                 <ProductImage url={mainUrl} alt={product.name} />
               </div>
               <div className="size-full shrink-0 snap-start md:absolute md:inset-0 md:opacity-0 md:transition-opacity md:duration-300 md:group-hover:opacity-100">

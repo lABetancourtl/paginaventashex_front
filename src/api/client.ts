@@ -19,7 +19,7 @@ export class ApiRequestError extends Error {
 export const http = axios.create({
   baseURL: '/api',
   timeout: 10000,
-  headers: { 'Content-Type': 'application/json' },
+  paramsSerializer: { indexes: null },
 })
 
 // ─── NUEVO: puerto para reaccionar a un 401 ──────────────────
@@ -150,5 +150,28 @@ export async function apiPatch<T>(url: string, data?: unknown): Promise<T> {
 // ─── Helper para peticiones DELETE ───────────────────────────
 export async function apiDelete<T>(url: string): Promise<T> {
   const response = await http.delete<ApiResponse<T>>(url)
+  return unwrap(response.data)
+}
+
+// ─── Helper para subir archivos (multipart/form-data) ────────
+interface UploadOptions {
+  timeout?: number
+  onProgress?: (percent: number) => void
+}
+
+export async function apiPostForm<T>(
+  url: string,
+  formData: FormData,
+  { timeout = 60000, onProgress }: UploadOptions = {},
+): Promise<T> {
+  const response = await http.post<ApiResponse<T>>(url, formData, {
+    // Subir un archivo tarda más que una petición normal
+    timeout,
+    onUploadProgress: (event) => {
+      if (event.total) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100))
+      }
+    },
+  })
   return unwrap(response.data)
 }

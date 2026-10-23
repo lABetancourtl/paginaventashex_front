@@ -7,3 +7,10 @@ export function normalizeText(text: string): string {
     .toLowerCase()
     .trim()
 }
+
+// "Pijamas de Niño" → "pijamas-de-nino"
+export function slugify(text: string): string {
+  return normalizeText(text)
+    .replace(/[^a-z0-9]+/g, '-') // Todo lo que no sea letra o número se vuelve guion
+    .replace(/^-+|-+$/g, '')      // Sin guiones al inicio ni al final
+}

@@ -4,7 +4,7 @@
 @theme {
   --font-sans: "Montserrat Variable", ui-sans-serif, system-ui, sans-serif;
 /* efefec */
-  --color-canvas: #efefec;
+  --color-canvas: #ffffff;
   /* --color-canvas: #ffffff; */
   --color-surface: var(--color-canvas);
   --color-line: #dcdcd6;

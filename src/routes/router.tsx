@@ -19,6 +19,10 @@ import { lazy, Suspense } from 'react'
 const AdminLayout = lazy(() => import('../admin/layouts/AdminLayout'))
 const AdminHomePage = lazy(() => import('../admin/pages/AdminHomePage'))
 const AdminPlaceholderPage = lazy(() => import('../admin/pages/AdminPlaceholderPage'))
+const AdminCategoriesPage = lazy(() => import('../admin/pages/AdminCategoriesPage'))
+const AdminProductsPage = lazy(() => import('../admin/pages/AdminProductsPage'))
+const AdminProductCreatePage = lazy(() => import('../admin/pages/AdminProductCreatePage'))
+const AdminProductEditPage = lazy(() => import('../admin/pages/AdminProductEditPage'))
 
 export const router = createBrowserRouter([
   {
@@ -64,8 +68,10 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <AdminHomePage /> },
-      { path: 'productos', element: <AdminPlaceholderPage title="Productos" /> },
-      { path: 'categorias', element: <AdminPlaceholderPage title="Categorías" /> },
+      { path: 'productos', element: <AdminProductsPage /> },
+      { path: 'productos/nuevo', element: <AdminProductCreatePage /> },
+      { path: 'productos/:id', element: <AdminProductEditPage /> },
+      { path: 'categorias', element: <AdminCategoriesPage /> },
       { path: 'pedidos', element: <AdminPlaceholderPage title="Pedidos" /> },
     ],
   },

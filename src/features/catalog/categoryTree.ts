@@ -1,4 +1,5 @@
-import type { CategoryTreeNode } from './types'
+import type { AdminCategoryNode, CategoryTreeNode } from './types'
+
 
 // Quita las categorías inactivas en todos los niveles del árbol
 export function filterActive(nodes: CategoryTreeNode[]): CategoryTreeNode[] {
@@ -51,4 +52,36 @@ export function findCategoryContextById(
   }
 
   return null
+}
+
+// Ordena cada nivel del árbol por displayOrder
+export function sortByDisplayOrder(nodes: AdminCategoryNode[]): AdminCategoryNode[] {
+  return [...nodes]
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((node) => ({ ...node, children: sortByDisplayOrder(node.children) }))
+}
+
+// Intercambia el orden entre una categoría y la hermana que ocupa el orden destino
+// (la misma regla del backend, para la actualización optimista)
+export function swapDisplayOrder(
+  nodes: AdminCategoryNode[],
+  id: number,
+  newDisplayOrder: number,
+): AdminCategoryNode[] {
+  const moving = nodes.find((node) => node.id === id)
+
+  if (moving) {
+    const oldOrder = moving.displayOrder
+    return nodes.map((node) => {
+      if (node.id === id) return { ...node, displayOrder: newDisplayOrder }
+      if (node.displayOrder === newDisplayOrder) return { ...node, displayOrder: oldOrder }
+      return node
+    })
+  }
+
+  // No está en este nivel: lo buscamos entre los hijos
+  return nodes.map((node) => ({
+    ...node,
+    children: swapDisplayOrder(node.children, id, newDisplayOrder),
+  }))
 }
