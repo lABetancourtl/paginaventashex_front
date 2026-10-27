@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { useProfile } from '../../profile/hooks/useProfile'
 import { getDisplayName } from '../../../utils/formatters'
 import { getAccountLinks } from '../accountLinks'
+import UserAvatar from '../../../components/UserAvatar'
 
 // En celular las opciones son más altas, para tocarlas fácil con el dedo
 const itemBase = 'flex items-center gap-3 py-3.5 text-sm uppercase tracking-wide md:py-2.5'
@@ -22,9 +23,14 @@ function AccountNav() {
 
   return (
     <div>
-      <h2 className="mb-6 truncate text-lg font-extrabold uppercase tracking-wide">
-        Hola, {displayName}
-      </h2>
+      <div className="mb-6 flex items-center gap-3">
+        {session && (
+          <UserAvatar seed={session.email} size={44} animate="always" className="ring-1 ring-line" />
+        )}
+        <h2 className="min-w-0 truncate text-lg font-extrabold uppercase tracking-wide">
+          Hola, {displayName}
+        </h2>
+      </div>
 
       <nav aria-label="Mi cuenta">
         <ul>

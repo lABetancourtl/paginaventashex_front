@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { UIEvent } from 'react'
 import { cloudinarySrcSet, cloudinaryUrl } from '../../../utils/cloudinary'
+import { HIDE_HEADER_ANCHOR } from '../../../hooks/useHideOnScroll'
 
 // Celular: la imagen ocupa todo el ancho · Computador: media columna de la galería
 const IMAGE_WIDTHS = [400, 600, 800, 1000, 1200, 1600]
@@ -56,9 +57,10 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
         {images.map((url, index) => (
           <li
             key={url}
+            {...(index === 0 ? { [HIDE_HEADER_ANCHOR]: '' } : {})}
             aria-roledescription="imagen"
             aria-label={`${index + 1} de ${images.length}`}
-            className="aspect-[3/4] w-full shrink-0 snap-start bg-surface md:w-auto"
+            className="aspect-[3/4] w-full shrink-0 snap-start bg-surface md:aspect-auto md:h-[calc(100vh-4.5rem)] md:w-auto"
           >
             <img
               src={cloudinaryUrl(url, 1000)}

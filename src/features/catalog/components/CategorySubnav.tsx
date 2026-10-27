@@ -10,7 +10,11 @@ const itemClass = [
   'aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:underline-offset-8',
 ].join(' ')
 
-function CategorySubnav() {
+interface CategorySubnavProps {
+  hidden?: boolean
+}
+
+function CategorySubnav({ hidden = false }: CategorySubnavProps) {
   const { slug } = useParams()
   const { data: categories } = useCategoryTree()
   const isSaleView = useIsSaleView()
@@ -28,7 +32,15 @@ function CategorySubnav() {
   return (
     <nav
       aria-label={`Subcategorías de ${root.name}`}
-      className="sticky top-14 z-20 border-b border-line bg-canvas/95 backdrop-blur-md"
+      className={[
+        'sticky top-14 z-20 border-b border-line bg-canvas/95 backdrop-blur-md',
+        'transition-transform duration-500 motion-reduce:transition-none',
+        'has-[:focus-visible]:translate-y-0 has-[:focus-visible]:delay-0',
+        // Esconder: sale primero · Mostrar: espera al header
+        hidden
+          ? '-translate-y-[calc(100%+3.5rem)] delay-0 ease-header-hide'
+          : 'translate-y-0 delay-150 ease-header-show',
+      ].join(' ')}
     >
       <ul className="flex gap-6 overflow-x-auto px-4 md:gap-8 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <li className="shrink-0">

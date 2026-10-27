@@ -1,11 +1,10 @@
 import { Link } from 'react-router'
 import { ImageOff } from 'lucide-react'
 import { cloudinarySrcSet, cloudinaryUrl } from '../../../utils/cloudinary'
+import { toSingular } from '../../../utils/text'
 import ProductPrice from './ProductPrice'
 import type { Product } from '../types'
 
-// Anchos disponibles y cuánto ocupa la imagen en pantalla:
-// 4 columnas desde 768px (25% del ancho), 2 columnas en celular (50%)
 const IMAGE_WIDTHS = [300, 450, 600, 900, 1200]
 const IMAGE_SIZES = '(min-width: 768px) 25vw, 50vw'
 
@@ -23,7 +22,7 @@ function ProductImage({ url, alt }: ProductImageProps) {
       alt={alt}
       loading="lazy"
       decoding="async"
-      className="size-full object-contain object-bottom"
+      className="size-full object-contain"
     />
   )
 }
@@ -34,14 +33,13 @@ interface ProductCardProps {
 
 function ProductCard({ product }: ProductCardProps) {
   const { catalogMainUrl: mainUrl, catalogHoverUrl: hoverUrl } = product
-  const hasDiscount = product.discountPercent !== null && product.discountPercent > 0
 
   return (
     <article className="group">
       <Link to={`/producto/${product.id}`} className="block">
-        <div className="relative aspect-[5/6] overflow-hidden md:aspect-[9/10]">
+        {/* Cuadrado, como las fotos: sin espacio sobrante arriba ni abajo */}
+        <div className="relative aspect-square overflow-hidden">
           {mainUrl && hoverUrl ? (
-            // Dos imágenes: carrusel en celular, cambio al pasar el mouse en computador
             <div className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:block md:overflow-hidden">
               <div className="size-full shrink-0 snap-start md:absolute md:inset-0 md:transition-opacity md:duration-300 md:group-hover:opacity-0">
                 <ProductImage url={mainUrl} alt={product.name} />
@@ -58,16 +56,12 @@ function ProductCard({ product }: ProductCardProps) {
               <span className="sr-only">Producto sin imagen</span>
             </div>
           )}
-
-          {hasDiscount && (
-            <span className="absolute left-2 top-2 bg-sale-ink px-2 py-0.5 text-xs font-bold text-white">
-              -{product.discountPercent}%
-            </span>
-          )}
         </div>
 
-        <h3 className="mt-3 line-clamp-2 px-1 text-xs font-bold uppercase tracking-wide">
-          {product.name}
+        {/* Se ve la subcategoría en singular; el nombre completo queda para lectores de pantalla */}
+        <h3 className="mt-3 px-1 text-xs font-bold uppercase tracking-wide">
+          {toSingular(product.categoryName)}
+          <span className="sr-only">: {product.name}</span>
         </h3>
 
         <div className="mt-1 px-1">

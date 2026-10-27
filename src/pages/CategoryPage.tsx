@@ -5,6 +5,7 @@ import { useCategoryTree } from '../features/catalog/hooks/useCategoryTree'
 import { useIsSaleView } from '../features/catalog/hooks/useIsSaleView'
 import { useProductSearch } from '../features/catalog/hooks/useProductSearch'
 import { findCategoryContext } from '../features/catalog/categoryTree'
+import { HIDE_HEADER_ANCHOR } from '../hooks/useHideOnScroll'
 
 // La página de la URL, o 1 si no existe o no es válida
 function parsePage(value: string | null): number {
@@ -82,8 +83,8 @@ function CategoryPage() {
             products.isPlaceholderData ? 'opacity-50' : ''
           }`}
         >
-          {products.data.items.map((product) => (
-            <li key={product.id}>
+          {products.data.items.map((product, index) => (
+            <li key={product.id} {...(index === 0 ? { [HIDE_HEADER_ANCHOR]: '' } : {})}>
               <ProductCard product={product} />
             </li>
           ))}

@@ -3,7 +3,7 @@
 /* ─── Tokens de diseño de PaginaVentasNet ─────────────────── */
 @theme {
   --font-sans: "Montserrat Variable", ui-sans-serif, system-ui, sans-serif;
-/* efefec */
+  /* efefec */
   --color-canvas: #ffffff;
   /* --color-canvas: #ffffff; */
   --color-surface: var(--color-canvas);
@@ -13,13 +13,18 @@
   --color-primary: #3a3d31;
   --color-primary-hover: #2a2c23;
   --color-danger: #a8321e;
-  --color-header: #355C5D;
+  --color-header: #355C5D; /*001219  000814 012a4a */
   --color-footer: color-mix(in oklab, var(--color-header) 75%, black);
-  --color-sale: #b5d334;   
-  --color-sale-ink: #55701a;  
+  --color-sale: #b5d334;
+  --color-sale-ink: #008000;
 
   /* Panel de administración */
-    --color-card: #ffffff; /* Tarjetas del panel de administración */
+  --color-card: #ffffff;
+  /* Tarjetas del panel de administración */
+
+    /* Curvas para esconder y mostrar el header */
+  --ease-header-show: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-header-hide: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 /* ─── Efecto vidrio ───────────────────────────────────────── */

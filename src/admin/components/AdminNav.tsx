@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router'
 import { LogOut, Store } from 'lucide-react'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { adminLinks } from '../adminLinks'
+import UserAvatar from '../../components/UserAvatar'
 
 const itemBase = 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors'
 const inactiveClass = 'text-ink-muted hover:bg-card/70 hover:text-ink'
@@ -49,7 +50,12 @@ function AdminNav({ onNavigate }: AdminNavProps) {
           <LogOut size={18} strokeWidth={1.5} aria-hidden="true" />
           Cerrar sesión
         </button>
-        <p className="truncate px-3 pt-2 text-xs text-ink-muted">{session?.email}</p>
+        {session && (
+          <div className="flex items-center gap-2 px-3 pt-2">
+            <UserAvatar seed={session.email} size={24} className="ring-1 ring-line" />
+            <p className="min-w-0 truncate text-xs text-ink-muted">{session.email}</p>
+          </div>
+        )}
       </div>
     </div>
   )

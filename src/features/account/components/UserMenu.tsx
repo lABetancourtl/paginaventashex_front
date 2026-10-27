@@ -7,6 +7,7 @@ import { useDismiss } from '../../../hooks/useDismiss'
 import { getDisplayName } from '../../../utils/formatters'
 import { headerIconButtonClass, headerPanelClass } from '../../../layouts/headerStyles'
 import { getAccountLinks } from '../accountLinks'
+import UserAvatar from '../../../components/UserAvatar'
 
 const itemClass =
   'flex w-full items-center gap-3 px-5 py-3.5 text-sm font-semibold uppercase tracking-wide hover:bg-white/10 focus-visible:outline-white'
@@ -53,7 +54,7 @@ function UserMenu() {
         aria-label={`Mi cuenta. Hola, ${displayName}`}
         className={`${headerIconButtonClass} md:hidden`}
       >
-        <CircleUserRound size={20} strokeWidth={1.5} aria-hidden="true" />
+        <UserAvatar seed={session.email} size={26} className="ring-1 ring-white/40" />
       </Link>
 
       {/* Computador: el ícono abre el menú desplegable */}
@@ -65,7 +66,7 @@ function UserMenu() {
         aria-controls="user-menu"
         className={`${headerIconButtonClass} md:w-auto md:gap-2 md:pl-2 md:pr-3`}
       >
-        <CircleUserRound size={22} strokeWidth={1.5} aria-hidden="true" />
+        <UserAvatar seed={session.email} size={26} className="ring-1 ring-white/40" />
         {/* Visible solo en computador; en celular lo leen los lectores de pantalla */}
         <span className="sr-only text-sm md:not-sr-only md:max-w-44 md:truncate">
           Hola, {displayName}

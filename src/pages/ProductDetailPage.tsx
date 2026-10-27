@@ -81,7 +81,14 @@ function ProductDetailPage() {
       <ProductGallery images={images} productName={item.name} />
 
       {/* Columna de información: fija al recorrer las imágenes en computador */}
-      <div className="md:sticky md:top-18 md:max-h-[calc(100vh-4.5rem)] md:self-start md:overflow-y-auto">
+      <div
+        className={[
+          'md:sticky md:top-18 md:max-h-[calc(100vh-4.5rem)] md:self-start md:overflow-y-auto',
+          'md:transition-[top] md:duration-500 md:ease-header-show motion-reduce:transition-none',
+          // Con el header escondido, la columna sube y aprovecha la pantalla
+          '[[data-header-hidden]_&]:md:top-4 [[data-header-hidden]_&]:md:max-h-[calc(100vh-2rem)]',
+        ].join(' ')}
+      >
         {/* Bloque 1: ruta, nombre y precio */}
         <div className={`${blockClass} border-b border-line`}>
           {context && (

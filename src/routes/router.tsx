@@ -30,8 +30,16 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'categoria/:slug', element: <CategoryPage />, handle: { fullWidth: true } },
-      { path: 'producto/:id', element: <ProductDetailPage />, handle: { fullWidth: true } },
+      {
+        path: 'categoria/:slug',
+        element: <CategoryPage />,
+        handle: { fullWidth: true, hideHeaderOnScroll: true },
+      },
+      {
+        path: 'producto/:id',
+        element: <ProductDetailPage />,
+        handle: { fullWidth: true, hideHeaderOnScroll: true },
+      },
 
       // Rutas para cualquier usuario con sesión
       {
