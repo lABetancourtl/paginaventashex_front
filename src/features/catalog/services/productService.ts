@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from '../../../api/client'
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut,  } from '../../../api/client'
 import type { PagedResult } from '../../../types/api'
 import type {
   AdminProductSearchParams,
@@ -7,6 +7,7 @@ import type {
   ProductSearchParams,
   UpdateProductRequest,
   ProductDetail,
+  AdminProductDetail,
 } from '../types'
 
 export function searchProducts(params: ProductSearchParams): Promise<PagedResult<Product>> {
@@ -34,8 +35,8 @@ export async function deactivateProduct(id: number): Promise<void> {
   await apiPatch<boolean>(`/products/${id}/deactivate`)
 }
 
-export function getAdminProduct(id: number): Promise<Product> {
-  return apiGet<Product>(`/products/admin/${id}`)
+export function getAdminProduct(id: number): Promise<AdminProductDetail> {
+  return apiGet<AdminProductDetail>(`/products/admin/${id}`)
 }
 
 // Retorna el id del producto creado

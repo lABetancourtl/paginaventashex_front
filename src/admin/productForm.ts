@@ -16,13 +16,14 @@ export function emptyProductFormValues(): ProductFormValues {
   return { name: '', description: '', price: '', sku: '', stock: '', categoryId: '' }
 }
 
+// Al editar, el SKU y el stock se gestionan en cada variante
 export function toProductFormValues(product: Product): ProductFormValues {
   return {
     name: product.name,
     description: product.description ?? '',
     price: String(Math.round(product.price)),
-    sku: product.sku,
-    stock: String(product.stock),
+    sku: '',
+    stock: '',
     categoryId: String(product.categoryId),
   }
 }

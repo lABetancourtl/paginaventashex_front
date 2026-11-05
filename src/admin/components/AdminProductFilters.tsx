@@ -71,7 +71,7 @@ function AdminProductFilters({
             type="search"
             value={searchInput}
             onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder="Buscar por nombre o SKU"
+            placeholder="Buscar por nombre"
             className={`${fieldClass} pl-9`}
           />
         </div>

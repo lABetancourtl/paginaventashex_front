@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router'
 import { ImageOff, Pencil } from 'lucide-react'
 import ProductPrice from '../../features/catalog/components/ProductPrice'
@@ -5,8 +6,7 @@ import { cloudinaryUrl } from '../../utils/cloudinary'
 import type { Product } from '../../features/catalog/types'
 import StatusBadge from './StatusBadge'
 import { adminSecondaryButtonClass } from '../adminStyles'
-
-const LOW_STOCK = 5
+import StockText from './StockText'
 
 // ─── Piezas compartidas por la tabla y las tarjetas ─────────
 function ProductThumb({ product }: { product: Product }) {
@@ -24,12 +24,6 @@ function ProductThumb({ product }: { product: Product }) {
       )}
     </div>
   )
-}
-
-function StockText({ stock }: { stock: number }) {
-  if (stock <= 0) return <span className="font-medium text-danger">Agotado</span>
-  if (stock <= LOW_STOCK) return <span className="font-medium text-amber-700">{stock} (bajo)</span>
-  return <span>{stock}</span>
 }
 
 interface ProductActionsProps {
@@ -81,7 +75,7 @@ function AdminProductList({ products, getEditHref, isUpdating, onToggleStatus }:
               <th scope="col" className="py-3 pr-4 font-medium">Producto</th>
               <th scope="col" className="py-3 pr-4 font-medium">Categoría</th>
               <th scope="col" className="py-3 pr-4 font-medium">Precio</th>
-              <th scope="col" className="py-3 pr-4 font-medium">Stock</th>
+              <th scope="col" className="py-3 pr-4 font-medium">Stock total</th>
               <th scope="col" className="py-3 pr-4 font-medium">Estado</th>
               <th scope="col" className="py-3 text-right font-medium">
                 <span className="sr-only">Acciones</span>
@@ -96,7 +90,6 @@ function AdminProductList({ products, getEditHref, isUpdating, onToggleStatus }:
                     <ProductThumb product={product} />
                     <div className="min-w-0">
                       <p className="max-w-xs truncate font-medium">{product.name}</p>
-                      <p className="text-xs text-ink-muted">{product.sku}</p>
                     </div>
                   </div>
                 </td>
@@ -109,7 +102,7 @@ function AdminProductList({ products, getEditHref, isUpdating, onToggleStatus }:
                   />
                 </td>
                 <td className="py-3 pr-4">
-                  <StockText stock={product.stock} />
+                  <StockText stock={product.totalStock ?? 0} />
                 </td>
                 <td className="py-3 pr-4">
                   <StatusBadge tone={product.isActive ? 'success' : 'neutral'}>
@@ -138,9 +131,7 @@ function AdminProductList({ products, getEditHref, isUpdating, onToggleStatus }:
               <ProductThumb product={product} />
               <div className="min-w-0 flex-1">
                 <p className="break-words text-sm font-medium">{product.name}</p>
-                <p className="text-xs text-ink-muted">
-                  {product.sku} · {product.categoryName}
-                </p>
+                <p className="text-xs text-ink-muted">{product.categoryName}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   <ProductPrice
                     price={product.price}
@@ -148,7 +139,7 @@ function AdminProductList({ products, getEditHref, isUpdating, onToggleStatus }:
                     discountPercent={product.discountPercent}
                   />
                   <span className="text-xs text-ink-muted">
-                    Stock: <StockText stock={product.stock} />
+                    Stock: <StockText stock={product.totalStock ?? 0} />
                   </span>
                 </div>
               </div>

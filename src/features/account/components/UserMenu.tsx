@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { CircleUserRound, LogOut, User, X } from 'lucide-react'
+import { LogOut, User, X } from 'lucide-react'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { useProfile } from '../../profile/hooks/useProfile'
 import { useDismiss } from '../../../hooks/useDismiss'

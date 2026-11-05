@@ -1,4 +1,4 @@
-import type { AdminProductSearchParams, ProductSearchParams } from './types'
+import type { AdminProductSearchParams, ProductSearchParams, SizeQuery } from './types'
 
 export const categoryKeys = {
   all: ['categories'] as const,
@@ -12,4 +12,14 @@ export const productKeys = {
   detail: (id: number) => ['products', 'detail', id] as const,
   admin: (params: AdminProductSearchParams) => ['products', 'admin', params] as const,
   adminDetail: (id: number) => ['products', 'admin-detail', id] as const,
+}
+
+export const sizeKeys = {
+  all: ['sizes'] as const,
+  list: (query: SizeQuery) => ['sizes', query] as const,
+}
+
+export const colorKeys = {
+  all: ['colors'] as const,
+  list: (includeInactive: boolean) => ['colors', { includeInactive }] as const,
 }

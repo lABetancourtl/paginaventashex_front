@@ -21,6 +21,7 @@ import { toProductFormValues, toUpdateProductRequest } from '../productForm'
 import type { ProductFormValues } from '../productForm'
 import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
 import ProductMediaManager from '../components/ProductMediaManager'
+import ProductVariantsManager from '../components/ProductVariantsManager'
 
 function AdminProductEditPage() {
   const { id } = useParams()
@@ -65,6 +66,9 @@ function AdminProductEditPage() {
 
   const item = product.data
   const imageCount = item.media.filter((media) => media.mediaType === 'Image').length
+  const totalStock = item.variants
+    .filter((variant) => variant.isActive)
+    .reduce((sum, variant) => sum + variant.stock, 0)
 
   const handleSubmit = (values: ProductFormValues) => {
     setSavedNotice(false)
@@ -86,7 +90,7 @@ function AdminProductEditPage() {
       <title>{`${item.name} | Admin ${SITE_NAME}`}</title>
 
       {backLink}
-      <AdminPageHeader title={item.name} description={`SKU ${item.sku} · ${item.categoryName}`} />
+      <AdminPageHeader title={item.name} description={item.categoryName} />
 
       {showCreatedNotice && (
         <div role="status" className="mb-4 flex items-start justify-between gap-3 rounded-xl bg-primary/10 px-4 py-3 text-sm text-primary">
@@ -128,6 +132,13 @@ function AdminProductEditPage() {
           </AdminCard>
 
           <AdminCard
+            title="Variantes"
+            actions={<span className="text-xs text-ink-muted">Stock total: {totalStock}</span>}
+          >
+            <ProductVariantsManager productId={item.id} variants={item.variants} />
+          </AdminCard>
+
+          <AdminCard
             title="Imágenes"
             actions={<span className="text-xs text-ink-muted">{imageCount} de 9</span>}
           >
@@ -147,6 +158,12 @@ function AdminProductEditPage() {
                 Este producto no tiene imágenes. Se verá sin foto en la tienda.
               </p>
             )}
+
+            {totalStock === 0 && (
+              <p className="mt-3 text-xs text-amber-800">
+                Sin unidades disponibles: la tienda lo mostrará como agotado.
+              </p>
+            )}           
 
             {setStatus.error && !confirmDeactivate && (
               <p role="alert" className="mt-3 text-sm text-danger">

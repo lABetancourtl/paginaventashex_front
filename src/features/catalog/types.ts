@@ -25,11 +25,13 @@ export interface ProductMedia {
   displayOrder: number
 }
 
+export type SizeGroup = 'Bebe' | 'Nino' | 'Adulto'
+
 // Una combinación de talla y color, con su propio SKU y stock
 export interface ProductVariant {
   id: number
   sizeId: number | null
-  sizeGroup: string | null
+  sizeGroup: SizeGroup | null
   sizeName: string | null
   colorId: number | null
   colorName: string | null
@@ -45,8 +47,6 @@ export interface Product {
   name: string
   description: string | null
   price: number
-  sku: string
-  stock: number
   isActive: boolean
   categoryId: number
   categoryName: string
@@ -57,6 +57,7 @@ export interface Product {
   discountPercent: number | null
   finalPrice: number
   inStock?: boolean
+  totalStock?: number
 }
 
 // Filtros de búsqueda (los mismos de SearchProductsDto)
@@ -131,4 +132,42 @@ export interface ProductDetail {
   catalogHoverUrl: string | null
   media: ProductMedia[]
   variants: ProductVariant[]
+}
+
+// ─── Panel admin: variantes, tallas y colores ────────────────
+export interface AdminProductVariant extends ProductVariant {
+  productId: number
+}
+
+// GET /api/products/admin/{id}: incluye todas las variantes, activas o no
+export interface AdminProductDetail extends Product {
+  variants: AdminProductVariant[]
+}
+
+// Body de POST y PUT de variantes (el PUT reemplaza la variante completa)
+export interface VariantRequest {
+  sizeId: number | null
+  colorId: number | null
+  sku: string
+  stock: number
+}
+
+export interface Size {
+  id: number
+  sizeGroup: SizeGroup
+  name: string
+  displayOrder: number
+  isActive: boolean
+}
+
+export interface Color {
+  id: number
+  name: string
+  hexCode: string | null
+  isActive: boolean
+}
+
+export interface SizeQuery {
+  sizeGroup?: SizeGroup
+  includeInactive?: boolean
 }

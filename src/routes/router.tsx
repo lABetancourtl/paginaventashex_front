@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter } from 'react-router'
 import MainLayout from '../layouts/MainLayout'
 import AccountLayout from '../layouts/AccountLayout'
 import RequireAuth from './RequireAuth'

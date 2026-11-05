@@ -1,6 +1,5 @@
 import { Link, useParams } from 'react-router'
 import { ApiRequestError } from '../api/client'
-import { primaryButtonClass } from '../components/formStyles'
 import { SITE_NAME } from '../config/site'
 import ProductGallery from '../features/catalog/components/ProductGallery'
 import ProductPrice from '../features/catalog/components/ProductPrice'
@@ -13,12 +12,6 @@ import ProductBenefits from '../features/catalog/components/ProductBenefits'
 import ProductInfoSections from '../features/catalog/components/ProductInfoSections'
 import ProductPurchasePanel from '../features/catalog/components/ProductPurchasePanel'
 
-// Mostramos la disponibilidad, no la cantidad exacta
-function getStockLabel(stock: number): { text: string; className: string } {
-  if (stock <= 0) return { text: 'Agotado', className: 'text-danger' }
-  if (stock <= 5) return { text: `¡Últimas ${stock} unidades!`, className: 'text-sale-ink' }
-  return { text: 'Disponible', className: 'text-ink-muted' }
-}
 
 // La galería: las imágenes de media ordenadas, o las del catálogo si no hay
 function getGalleryImages(product: ProductDetail): string[] {

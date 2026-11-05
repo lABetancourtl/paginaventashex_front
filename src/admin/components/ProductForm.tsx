@@ -129,13 +129,13 @@ function ProductForm({
         />
       </FormField>
 
-      {isCreate ? (
+      {isCreate && (
         <FormField
           id={fieldId('sku')}
           label="SKU"
           required
           error={errors.sku}
-          hint="Código único. No se puede cambiar después."
+          hint="Será el SKU de la primera variante."
         >
           <input
             id={fieldId('sku')}
@@ -149,14 +149,16 @@ function ProductForm({
             {...ariaFor('sku')}
           />
         </FormField>
-      ) : (
-        <FormField id={fieldId('sku')} label="SKU" hint="No se puede cambiar.">
-          <input id={fieldId('sku')} type="text" value={values.sku} readOnly className={`${readOnlyClass} font-mono`} />
-        </FormField>
       )}
 
-      {isCreate ? (
-        <FormField id={fieldId('stock')} label="Unidades disponibles" required error={errors.stock}>
+      {isCreate && (
+        <FormField
+          id={fieldId('stock')}
+          label="Unidades disponibles"
+          required
+          error={errors.stock}
+          hint="Las de la primera variante. Después podrás agregar tallas y colores."
+        >
           <input
             id={fieldId('stock')}
             name="stock"
@@ -168,10 +170,6 @@ function ProductForm({
             className={fieldClass}
             {...ariaFor('stock')}
           />
-        </FormField>
-      ) : (
-        <FormField id={fieldId('stock')} label="Unidades disponibles" hint="Por ahora no se puede cambiar.">
-          <input id={fieldId('stock')} type="text" value={values.stock} readOnly className={readOnlyClass} />
         </FormField>
       )}
 
