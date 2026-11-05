@@ -3,10 +3,9 @@ import { returnsInfo, shippingInfo } from '../../../config/storeInfo'
 
 interface ProductInfoSectionsProps {
   description: string | null
-  sku: string
 }
 
-function ProductInfoSections({ description, sku }: ProductInfoSectionsProps) {
+function ProductInfoSections({ description }: ProductInfoSectionsProps) {
   return (
     <div className="-mt-4 [&>details:last-child]:border-b-0">
       <AccordionItem title="Sobre el producto" defaultOpen>
@@ -15,7 +14,6 @@ function ProductInfoSections({ description, sku }: ProductInfoSectionsProps) {
         ) : (
           <p>Pronto agregaremos más información sobre este producto.</p>
         )}
-        <p className="mt-4 text-xs">Ref. {sku}</p>
       </AccordionItem>
 
       <AccordionItem title="Envíos">

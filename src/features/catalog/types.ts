@@ -25,6 +25,20 @@ export interface ProductMedia {
   displayOrder: number
 }
 
+// Una combinación de talla y color, con su propio SKU y stock
+export interface ProductVariant {
+  id: number
+  sizeId: number | null
+  sizeGroup: string | null
+  sizeName: string | null
+  colorId: number | null
+  colorName: string | null
+  colorHexCode: string | null
+  sku: string
+  stock: number
+  isActive: boolean
+}
+
 // Producto tal como lo retorna GET /api/products/search
 export interface Product {
   id: number
@@ -42,6 +56,7 @@ export interface Product {
   createdAtUtc: string
   discountPercent: number | null
   finalPrice: number
+  inStock?: boolean
 }
 
 // Filtros de búsqueda (los mismos de SearchProductsDto)
@@ -99,4 +114,21 @@ export interface UpdateProductRequest {
   name: string
   description: string
   price: number
+}
+
+// Detalle público de GET /api/products/{id}: el SKU y el stock viven en cada variante
+export interface ProductDetail {
+  id: number
+  name: string
+  description: string | null
+  price: number
+  discountPercent: number | null
+  finalPrice: number
+  inStock: boolean
+  categoryId: number
+  categoryName: string
+  catalogMainUrl: string | null
+  catalogHoverUrl: string | null
+  media: ProductMedia[]
+  variants: ProductVariant[]
 }

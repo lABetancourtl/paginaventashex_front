@@ -6,6 +6,7 @@ import type {
   Product,
   ProductSearchParams,
   UpdateProductRequest,
+  ProductDetail,
 } from '../types'
 
 export function searchProducts(params: ProductSearchParams): Promise<PagedResult<Product>> {
@@ -16,8 +17,8 @@ export function searchProducts(params: ProductSearchParams): Promise<PagedResult
   })
 }
 
-export function getProductById(id: number): Promise<Product> {
-  return apiGet<Product>(`/products/${id}`)
+export function getProductById(id: number): Promise<ProductDetail> {
+  return apiGet<ProductDetail>(`/products/${id}`)
 }
 
 // ─── Panel admin ─────────────────────────────────────────────
@@ -53,3 +54,4 @@ export async function setProductDiscount(id: number, discountPercent: number): P
 export async function removeProductDiscount(id: number): Promise<void> {
   await apiDelete<unknown>(`/products/${id}/discount`)
 }
+

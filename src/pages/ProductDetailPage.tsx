@@ -8,9 +8,10 @@ import { useCategoryTree } from '../features/catalog/hooks/useCategoryTree'
 import { useProduct } from '../features/catalog/hooks/useProduct'
 import { findCategoryContextById } from '../features/catalog/categoryTree'
 import { categoryPath } from '../features/catalog/catalogNav'
-import type { Product } from '../features/catalog/types'
+import type { ProductDetail } from '../features/catalog/types'
 import ProductBenefits from '../features/catalog/components/ProductBenefits'
 import ProductInfoSections from '../features/catalog/components/ProductInfoSections'
+import ProductPurchasePanel from '../features/catalog/components/ProductPurchasePanel'
 
 // Mostramos la disponibilidad, no la cantidad exacta
 function getStockLabel(stock: number): { text: string; className: string } {
@@ -20,7 +21,7 @@ function getStockLabel(stock: number): { text: string; className: string } {
 }
 
 // La galería: las imágenes de media ordenadas, o las del catálogo si no hay
-function getGalleryImages(product: Product): string[] {
+function getGalleryImages(product: ProductDetail): string[] {
   const fromMedia = [...product.media]
     .filter((item) => item.mediaType === 'Image')
     .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -67,8 +68,6 @@ function ProductDetailPage() {
 
   const item = product.data
   const images = getGalleryImages(item)
-  const stock = getStockLabel(item.stock)
-  const isSoldOut = item.stock <= 0
   const context = tree.data ? findCategoryContextById(tree.data, item.categoryId) : null
 
   // Espacio interior de cada bloque de la columna de información
@@ -133,14 +132,7 @@ function ProductDetailPage() {
 
         {/* Bloque 2: disponibilidad, compra y beneficios */}
         <div className={`${blockClass} border-b border-line`}>
-          <p className={`text-sm font-medium ${stock.className}`}>{stock.text}</p>
-
-          {/* Aquí irá el selector de talla, cuando el backend tenga variantes */}
-
-          {/* PROVISIONAL: se activa cuando construyamos el carrito */}
-          <button type="button" disabled className={`${primaryButtonClass} mt-5`}>
-            {isSoldOut ? 'Agotado' : 'Agregar a la bolsa'}
-          </button>
+          <ProductPurchasePanel key={item.id} product={item} />
 
           <div className="mt-7">
             <ProductBenefits />
@@ -149,7 +141,7 @@ function ProductDetailPage() {
 
         {/* Bloque 3: secciones desplegables */}
         <div className={blockClass}>
-          <ProductInfoSections description={item.description} sku={item.sku} />
+          <ProductInfoSections description={item.description} />
         </div>
       </div>
     </article>

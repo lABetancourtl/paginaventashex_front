@@ -56,6 +56,13 @@ function ProductCard({ product }: ProductCardProps) {
               <span className="sr-only">Producto sin imagen</span>
             </div>
           )}
+
+          
+          {product.inStock === false && (
+            <span className="absolute left-2 top-2 bg-ink/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              Agotado
+            </span>
+        )}
         </div>
 
         {/* Se ve la subcategoría en singular; el nombre completo queda para lectores de pantalla */}
