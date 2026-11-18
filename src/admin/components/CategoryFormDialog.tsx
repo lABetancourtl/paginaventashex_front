@@ -1,15 +1,15 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import type { FormEvent } from 'react'
-import Modal from '../../components/Modal'
-import FormField from '../../components/FormField'
-import { inputClass } from '../../components/formStyles'
+import { AlertTriangle, Check, Copy, FolderPlus, Link2, Pencil, RefreshCw, Undo2 } from 'lucide-react'
 import { slugify } from '../../utils/text'
 import type { AdminCategoryNode } from '../../features/catalog/types'
-import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
+import AdminDialog, { AdminDialogBody, AdminDialogFooter } from './AdminDialog'
+import AdminField, { AdminInputGroup } from './AdminField'
+import { adminInputClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
 
 // Qué abrió el formulario: crear (con o sin padre) o editar
 export type CategoryDialogState =
-  | { mode: 'create'; parent: AdminCategoryNode | null }
+  | { mode: 'create'; parent: AdminCategoryNode | null; resetKey?: number } // resetKey: deja el formulario en blanco
   | { mode: 'edit'; category: AdminCategoryNode }
 
 export interface CategoryFormValues {
@@ -19,7 +19,7 @@ export interface CategoryFormValues {
 }
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-const fieldClass = `${inputClass} rounded-lg`
+const SLUG_PREFIX = '/categoria/'
 
 // Slug sugerido: el del padre como prefijo, como en "nino-bodys"
 function suggestSlug(name: string, parentSlug: string | undefined): string {
@@ -33,7 +33,7 @@ interface CategoryFormProps {
   roots: AdminCategoryNode[]
   isSaving: boolean
   serverError: string | null
-  onSubmit: (values: CategoryFormValues) => void
+  onSubmit: (values: CategoryFormValues, options: { another: boolean }) => void
   onCancel: () => void
 }
 
@@ -51,6 +51,7 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
   const [errors, setErrors] = useState<{ name?: string; slug?: string }>({})
 
   const parentSlugOf = (id: number | null) => roots.find((root) => root.id === id)?.slug
+  const suggested = suggestSlug(name, parentSlugOf(parentId))
 
   const handleNameChange = (value: string) => {
     setName(value)
@@ -65,7 +66,13 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
 
   const handleSlugChange = (value: string) => {
     setSlugTouched(true)
-    setSlug(value.toLowerCase())
+    setSlug(value.toLowerCase().replace(/\s+/g, '-'))
+  }
+
+  // Vuelve a generar el slug desde el nombre y lo deja automático otra vez
+  const resetSlug = () => {
+    setSlug(suggested)
+    setSlugTouched(false)
   }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -80,88 +87,177 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    onSubmit({ name: name.trim(), slug, parentId })
+    // ¿Qué botón lo envió? El de "crear otra" lleva value="another"
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+    onSubmit({ name: name.trim(), slug, parentId }, { another: submitter?.value === 'another' })
   }
 
+  // Copiar la dirección completa de la categoría
+  const [copied, setCopied] = useState(false)
+  const fullUrl = `${window.location.origin}${SLUG_PREFIX}${slug}`
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(fullUrl)
+      setCopied(true)
+    } catch {
+      // Sin permiso para el portapapeles: no se hace nada
+    }
+  }
+  useEffect(() => {
+    if (!copied) return
+    const timer = window.setTimeout(() => setCopied(false), 1500)
+    return () => window.clearTimeout(timer)
+  }, [copied])
+
+  const slugChanged = isEdit && slug !== state.category.slug
+
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
-      <FormField id={`${baseId}-name`} label="Nombre" required error={errors.name}>
-        <input
-          id={`${baseId}-name`}
-          type="text"
-          value={name}
-          onChange={(e) => handleNameChange(e.target.value)}
-          maxLength={100}
-          autoFocus
-          disabled={isSaving}
-          aria-invalid={errors.name ? true : undefined}
-          aria-describedby={errors.name ? `${baseId}-name-error` : undefined}
-          className={fieldClass}
-        />
-      </FormField>
+    <form onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
+      <AdminDialogBody>
+        <AdminField id={`${baseId}-name`} label="Nombre" required error={errors.name} aside={`${name.length}/100`}>
+          <input
+            id={`${baseId}-name`}
+            type="text"
+            value={name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            maxLength={100}
+            autoFocus
+            placeholder="Ej: Pijamas"
+            disabled={isSaving}
+            aria-invalid={errors.name ? true : undefined}
+            aria-describedby={errors.name ? `${baseId}-name-error` : undefined}
+            className={adminInputClass}
+          />
+        </AdminField>
 
-      <FormField
-        id={`${baseId}-parent`}
-        label="Categoría principal"
-        hint={isEdit ? 'Por ahora no se puede cambiar.' : undefined}
-      >
-        <select
+        <AdminField
           id={`${baseId}-parent`}
-          value={parentId ?? ''}
-          onChange={(e) => handleParentChange(e.target.value)}
-          disabled={isSaving || isEdit}
-          className={fieldClass}
+          label="Categoría principal"
+          hint={
+            isEdit
+              ? 'Por ahora no se puede cambiar.'
+              : parentId === null
+                ? 'Será una categoría principal y aparecerá en el menú de la tienda.'
+                : 'Será una subcategoría dentro de la principal elegida.'
+          }
         >
-          <option value="">Ninguna (es una categoría principal)</option>
-          {roots.map((root) => (
-            <option key={root.id} value={root.id}>
-              {root.name}
-            </option>
-          ))}
-        </select>
-      </FormField>
+          <select
+            id={`${baseId}-parent`}
+            value={parentId ?? ''}
+            onChange={(e) => handleParentChange(e.target.value)}
+            disabled={isSaving || isEdit}
+            className={adminInputClass}
+          >
+            <option value="">Ninguna (es una categoría principal)</option>
+            {roots.map((root) => (
+              <option key={root.id} value={root.id}>
+                {root.name}
+              </option>
+            ))}
+          </select>
+        </AdminField>
 
-      <FormField
-        id={`${baseId}-slug`}
-        label="Slug"
-        required
-        error={errors.slug}
-        hint="Es la parte de la URL: /categoria/slug"
-      >
-        <input
+        <AdminField
           id={`${baseId}-slug`}
-          type="text"
-          value={slug}
-          onChange={(e) => handleSlugChange(e.target.value)}
-          maxLength={100}
-          disabled={isSaving}
-          aria-invalid={errors.slug ? true : undefined}
-          aria-describedby={errors.slug ? `${baseId}-slug-error` : `${baseId}-slug-hint`}
-          className={`${fieldClass} font-mono text-sm`}
-        />
-      </FormField>
+          label="Slug"
+          required
+          error={errors.slug}
+          aside={
+            slugTouched && slug !== suggested && suggested !== '' ? (
+              <button
+                type="button"
+                onClick={resetSlug}
+                disabled={isSaving}
+                className="inline-flex items-center gap-1 font-medium text-admin-accent hover:underline"
+              >
+                <RefreshCw size={12} strokeWidth={2} aria-hidden="true" />
+                Generar desde el nombre
+              </button>
+            ) : undefined
+          }
+          hint="Se genera solo a partir del nombre. Solo minúsculas, números y guiones."
+        >
+          <AdminInputGroup prefix={<span className="font-mono text-xs">{SLUG_PREFIX}</span>}>
+            <input
+              id={`${baseId}-slug`}
+              type="text"
+              value={slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              maxLength={100}
+              disabled={isSaving}
+              aria-invalid={errors.slug ? true : undefined}
+              aria-describedby={errors.slug ? `${baseId}-slug-error` : `${baseId}-slug-hint`}
+              className={`${adminInputClass} pl-[92px] font-mono`}
+            />
+          </AdminInputGroup>
+        </AdminField>
 
-      {isEdit && slug !== state.category.slug && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          Cambiar el slug cambia la URL de la categoría. Los enlaces que ya se hayan compartido dejarán
-          de funcionar.
-        </p>
-      )}
+        {/* Vista previa de la dirección */}
+        <div className="flex items-center gap-2 rounded-xl border border-admin-line bg-admin-bg/60 px-3 py-2.5">
+          <Link2 size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-ink-muted" />
+          <p className="min-w-0 flex-1 truncate font-mono text-xs text-ink-muted">
+            {window.location.host}
+            {SLUG_PREFIX}
+            <span className="text-ink">{slug || 'slug'}</span>
+          </p>
+          <button
+            type="button"
+            onClick={copyUrl}
+            disabled={!slug}
+            aria-label="Copiar dirección"
+            title="Copiar dirección"
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-ink-muted transition-colors hover:bg-white hover:text-ink disabled:opacity-40"
+          >
+            {copied ? (
+              <Check size={13} strokeWidth={2} aria-hidden="true" className="text-green-600" />
+            ) : (
+              <Copy size={13} strokeWidth={1.75} aria-hidden="true" />
+            )}
+            {copied ? 'Copiada' : 'Copiar'}
+          </button>
+        </div>
 
-      {serverError && (
-        <p role="alert" className="text-sm text-danger">
-          {serverError}
-        </p>
-      )}
+        {slugChanged && (
+          <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+            <AlertTriangle size={15} strokeWidth={1.75} aria-hidden="true" className="mt-px shrink-0" />
+            <div className="flex-1">
+              <p>
+                Cambiar el slug cambia la URL de la categoría. Los enlaces que ya se hayan compartido dejarán de
+                funcionar.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSlug(state.category.slug)}
+                disabled={isSaving}
+                className="mt-1.5 inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline"
+              >
+                <Undo2 size={12} strokeWidth={2} aria-hidden="true" />
+                Restaurar “{state.category.slug}”
+              </button>
+            </div>
+          </div>
+        )}
 
-      <div className="flex justify-end gap-2 pt-2">
+        {serverError && (
+          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
+            {serverError}
+          </p>
+        )}
+      </AdminDialogBody>
+
+      <AdminDialogFooter>
         <button type="button" onClick={onCancel} disabled={isSaving} className={adminSecondaryButtonClass}>
           Cancelar
         </button>
+        {!isEdit && (
+          <button type="submit" value="another" disabled={isSaving} className={adminSecondaryButtonClass}>
+            Crear y agregar otra
+          </button>
+        )}
         <button type="submit" disabled={isSaving} className={adminPrimaryButtonClass}>
           {isSaving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear categoría'}
         </button>
-      </div>
+      </AdminDialogFooter>
     </form>
   )
 }
@@ -172,31 +268,41 @@ interface CategoryFormDialogProps {
   roots: AdminCategoryNode[]
   isSaving: boolean
   serverError: string | null
-  onSubmit: (values: CategoryFormValues) => void
+  onSubmit: (values: CategoryFormValues, options: { another: boolean }) => void
   onClose: () => void
 }
 
 function CategoryFormDialog({ state, roots, isSaving, serverError, onSubmit, onClose }: CategoryFormDialogProps) {
   let title = 'Nueva categoría'
-  if (state?.mode === 'edit') title = 'Editar categoría'
-  else if (state?.parent) title = `Nueva subcategoría de ${state.parent.name}`
+  let description = 'Agrégala al menú de la tienda o dentro de otra categoría.'
+  if (state?.mode === 'edit') {
+    title = 'Editar categoría'
+    description = state.category.name
+  } else if (state?.parent) {
+    title = 'Nueva subcategoría'
+    description = `Dentro de ${state.parent.name}`
+  }
 
   return (
-    <Modal isOpen={state !== null} onClose={onClose} ariaLabel={title} size="small">
+    <AdminDialog
+      open={state !== null}
+      onClose={isSaving ? () => {} : onClose}
+      title={title}
+      description={description}
+      icon={state?.mode === 'edit' ? Pencil : FolderPlus}
+    >
       {state && (
-        <div className="pt-4">
-          <h2 className="mb-5 pr-8 text-lg font-bold tracking-tight">{title}</h2>
-          <CategoryForm
-            state={state}
-            roots={roots}
-            isSaving={isSaving}
-            serverError={serverError}
-            onSubmit={onSubmit}
-            onCancel={onClose}
-          />
-        </div>
+        <CategoryForm
+          key={state.mode === 'create' ? (state.resetKey ?? 0) : state.category.id}
+          state={state}
+          roots={roots}
+          isSaving={isSaving}
+          serverError={serverError}
+          onSubmit={onSubmit}
+          onCancel={onClose}
+        />
       )}
-    </Modal>
+    </AdminDialog>
   )
 }
 

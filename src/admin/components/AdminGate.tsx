@@ -15,8 +15,8 @@ function AdminGate({ children }: AdminGateProps) {
   // ─── Sin sesión: el login, dentro del diseño del panel ────
   if (!session) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
-        <div className="w-full max-w-md border border-line bg-surface p-6 md:p-10">
+      <div className="flex min-h-screen items-center justify-center bg-admin-bg px-4 py-10">
+        <div className="w-full max-w-md rounded-2xl border border-admin-line bg-white p-6 shadow-sm md:p-10">
           <p className="mb-6 text-center text-xs font-bold uppercase tracking-widest text-ink-muted">
             Panel de administración
           </p>

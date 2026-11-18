@@ -38,9 +38,9 @@ const layoutClasses: Record<ModalSize, string> = {
 }
 
 const contentSizeClasses: Record<ModalSize, string> = {
-  default: 'relative flex-1 overflow-y-auto px-6 pb-10 pt-3 md:px-10',
+  default: 'relative flex-1 overflow-y-auto px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-3 md:px-10 md:pb-10',
   small: 'relative px-6 pb-6 pt-3',
-  fullscreen: 'relative flex-1 overflow-y-auto',
+  fullscreen: 'relative flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]',
 }
 
 function Modal({

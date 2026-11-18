@@ -1,4 +1,4 @@
-import { FolderTree, LayoutDashboard, Package, Receipt } from 'lucide-react'
+import { FolderTree, LayoutDashboard, LayoutTemplate, Package, Receipt } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface AdminLink {
@@ -28,6 +28,12 @@ export const adminLinks: AdminLink[] = [
     label: 'Categorías',
     description: 'Gestiona las categorías y subcategorías de la tienda.',
     icon: FolderTree,
+  },
+  {
+    to: '/admin/inicio',
+    label: 'Página de inicio',
+    description: 'Arma el inicio de la tienda con banners y estantes de productos.',
+    icon: LayoutTemplate,
   },
   {
     to: '/admin/pedidos',

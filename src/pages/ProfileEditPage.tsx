@@ -38,7 +38,7 @@ function ProfileEditPage() {
         <h2 className="text-lg font-extrabold uppercase tracking-wide">Editar perfil</h2>
       </div>
 
-      <div className="border border-line p-6 md:p-10">
+      <div className="rounded-xl border border-card-line bg-white p-6 md:p-10">
         <ProfileForm
           initialValues={toFormValues(profile)}
           email={profile.email}

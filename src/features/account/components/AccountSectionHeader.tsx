@@ -1,28 +1,16 @@
-import { Link } from 'react-router'
-import { ArrowLeft } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 interface AccountSectionHeaderProps {
   title: string
-  desktopTitle?: boolean // ¿El título también se ve en computador?
+  action?: ReactNode // Acción principal a la derecha del título (por ejemplo, "Añadir dirección")
 }
 
-function AccountSectionHeader({ title, desktopTitle = false }: AccountSectionHeaderProps) {
+// Fila de alto fijo, para que el título no se mueva al cambiar de pestaña
+function AccountSectionHeader({ title, action }: AccountSectionHeaderProps) {
   return (
-    <div className={`mb-4 flex items-center gap-3 ${desktopTitle ? '' : 'md:mb-0'}`}>
-      {/* La flecha solo en celular: en computador está el menú lateral */}
-      <Link
-        to="/cuenta"
-        aria-label="Volver a mi cuenta"
-        className="p-1 hover:text-ink-muted md:hidden"
-      >
-        <ArrowLeft size={20} strokeWidth={1.5} aria-hidden="true" />
-      </Link>
-
-      <h2
-        className={`text-lg font-extrabold uppercase tracking-wide ${desktopTitle ? '' : 'md:sr-only'}`}
-      >
-        {title}
-      </h2>
+    <div className="mb-4 flex h-10 items-center justify-between gap-3">
+      <h2 className="text-base font-bold uppercase tracking-wide">{title}</h2>
+      {action}
     </div>
   )
 }

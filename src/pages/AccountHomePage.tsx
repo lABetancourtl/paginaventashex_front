@@ -1,19 +1,8 @@
-import AccountNav from '../features/account/components/AccountNav'
+import { Navigate } from 'react-router'
 
+// "/cuenta" sola lleva a Perfil: las pestañas de arriba sirven en celular y computador
 function AccountHomePage() {
-  return (
-    <>
-      {/* Celular: el menú de cuenta es el contenido de la página */}
-      <div className="md:hidden">
-        <AccountNav />
-      </div>
-
-      {/* Computador: el menú ya está a la izquierda */}
-      <p className="hidden border border-line p-10 text-center text-ink-muted md:block">
-        Elige una sección del menú para ver o editar tu información.
-      </p>
-    </>
-  )
+  return <Navigate to="/cuenta/perfil" replace />
 }
 
 export default AccountHomePage

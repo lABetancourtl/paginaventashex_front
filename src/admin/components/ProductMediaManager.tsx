@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, ImagePlus, Star, Trash2, Video } from 'lucide-react'
-import ConfirmDialog from '../../components/ConfirmDialog'
+import AdminConfirmDialog from './AdminConfirmDialog'
 import { ApiRequestError } from '../../api/client'
 import { cloudinaryUrl } from '../../utils/cloudinary'
 import {
@@ -11,7 +11,7 @@ import {
 } from '../../features/catalog/hooks/useProductMediaMutations'
 import type { MediaKind } from '../../features/catalog/services/productMediaService'
 import type { ProductMedia } from '../../features/catalog/types'
-import { adminSecondaryButtonClass } from '../adminStyles'
+import { adminIconButtonClass, adminSecondaryButtonClass } from '../adminStyles'
 
 // ─── Reglas de los archivos (ajústalas a las de tu backend) ──
 const MAX_IMAGES = 9
@@ -57,9 +57,7 @@ function TileButton({ label, onClick, disabled = false, hidden = false, children
       disabled={disabled || hidden}
       aria-label={label}
       title={label}
-      className={`rounded-md p-1.5 text-ink-muted hover:bg-canvas hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 ${
-        hidden ? 'invisible' : ''
-      }`}
+      className={`${adminIconButtonClass} size-7 ${hidden ? 'invisible' : ''}`}
     >
       {children}
     </button>
@@ -179,28 +177,31 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
   return (
     <div className="space-y-4">
       <p className="text-xs text-ink-muted">
-        La primera imagen es la <strong className="text-ink">principal</strong> del catálogo, y la
-        segunda aparece al pasar el mouse. Formatos JPG, PNG o WebP, hasta {MAX_IMAGE_MB} MB.
+        Formatos JPG, PNG o WebP, hasta {MAX_IMAGE_MB} MB cada una. Usa las flechas para cambiar el orden.
       </p>
 
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
         {images.map((item, index) => (
-          <li key={item.id} className="overflow-hidden rounded-lg border border-line bg-card">
-            <div className="relative aspect-square bg-canvas">
+          <li key={item.id} className="group overflow-hidden rounded-xl border border-admin-line bg-white transition-shadow hover:shadow-md hover:shadow-black/5">
+            <div className="relative aspect-square bg-admin-bg">
               <img
                 src={cloudinaryUrl(item.url, 400)}
                 alt={`Imagen ${index + 1}`}
                 loading="lazy"
-                className="size-full object-contain"
+                className="size-full object-contain mix-blend-multiply"
               />
               {index < 2 && (
-                <span className="absolute left-2 top-2 rounded bg-ink px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                <span
+                  className={`absolute left-2 top-2 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow-sm ${
+                    index === 0 ? 'bg-admin-accent text-white' : 'bg-white text-ink ring-1 ring-admin-line'
+                  }`}
+                >
                   {index === 0 ? 'Principal' : 'Hover'}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center justify-between border-t border-line px-1 py-1">
+            <div className="flex items-center justify-between border-t border-admin-line px-1.5 py-1">
               <div className="flex">
                 <TileButton
                   label="Mover a la izquierda"
@@ -251,13 +252,17 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
               onDragOver={handleDragOver}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
-              className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-3 text-center text-xs transition-colors ${
-                isDragging ? 'border-primary bg-primary/5 text-primary' : 'border-line text-ink-muted hover:border-ink/40'
+              className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-3 text-center text-xs transition-colors ${
+                isDragging
+                  ? 'border-admin-accent bg-admin-accent/5 text-admin-accent'
+                  : 'border-admin-line bg-admin-bg/40 text-ink-muted hover:border-admin-accent/50 hover:bg-admin-accent/5'
               } ${isBusy ? 'pointer-events-none opacity-50' : ''}`}
             >
-              <ImagePlus size={24} strokeWidth={1.25} aria-hidden="true" />
+              <span className="flex size-10 items-center justify-center rounded-xl bg-white text-admin-accent shadow-sm ring-1 ring-admin-line">
+                <ImagePlus size={20} strokeWidth={1.5} aria-hidden="true" />
+              </span>
               <span>
-                <strong className="text-ink">Elige imágenes</strong> o arrástralas aquí
+                <strong className="text-admin-accent">Elige imágenes</strong> o arrástralas aquí
               </span>
               <span>Quedan {remaining}</span>
             </label>
@@ -286,10 +291,10 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={progress.percent}
-            className="h-1.5 overflow-hidden rounded-full bg-line"
+            className="h-1.5 overflow-hidden rounded-full bg-admin-bg"
           >
             <div
-              className="h-full rounded-full bg-primary transition-[width]"
+              className="h-full rounded-full bg-admin-accent transition-[width]"
               style={{ width: `${progress.percent}%` }}
             />
           </div>
@@ -298,7 +303,7 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
 
       {/* Problemas con los archivos o con la subida */}
       {problems.length > 0 && (
-        <ul role="alert" className="space-y-1 rounded-lg bg-danger/5 px-3 py-2 text-xs text-danger">
+        <ul role="alert" className="space-y-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-danger">
           {problems.map((problem) => (
             <li key={problem}>{problem}</li>
           ))}
@@ -312,8 +317,10 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
       )}
 
       {/* El video */}
-      <div className="border-t border-line pt-4">
-        <p className="mb-2 text-xs font-bold uppercase tracking-wide">Video (opcional)</p>
+      <div className="border-t border-admin-line pt-5">
+        <p className="mb-3 text-sm font-semibold">
+          Video <span className="font-normal text-ink-muted">(opcional)</span>
+        </p>
         {video ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <video
@@ -322,7 +329,7 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
               muted
               playsInline
               preload="metadata"
-              className="aspect-video w-full rounded-lg bg-ink sm:w-72"
+              className="aspect-video w-full rounded-xl bg-ink sm:w-72"
             />
             <button
               type="button"
@@ -359,7 +366,7 @@ function ProductMediaManager({ productId, media }: ProductMediaManagerProps) {
         )}
       </div>
 
-      <ConfirmDialog
+      <AdminConfirmDialog
         isOpen={toDelete !== null}
         title={toDelete?.mediaType === 'Video' ? '¿Eliminar el video?' : '¿Eliminar esta imagen?'}
         message={deleteMessage}

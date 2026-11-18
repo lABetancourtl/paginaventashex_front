@@ -32,7 +32,7 @@ function AddressCreatePage() {
         backLabel="Volver a direcciones"
       />
 
-      <div className="border border-line p-6 md:p-10">
+      <div className="rounded-xl border border-card-line bg-white p-6 md:p-10">
         <AddressForm
           initialValues={emptyAddressFormValues(defaultNombre)}
           submitLabel="Añadir dirección"

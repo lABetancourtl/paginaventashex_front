@@ -25,13 +25,14 @@ function ProductPrice({ price, finalPrice, discountPercent, size = 'sm' }: Produ
           {formatCOP(price)}
         </span>
       )}
-      <span className={hasDiscount ? 'font-bold text-sale-ink' : undefined}>
+      {/* Detalle: precio final en negro y negrita · Tarjetas: verde si hay descuento */}
+      <span className={size === 'lg' ? 'font-bold text-ink' : hasDiscount ? 'font-bold text-sale-ink' : undefined}>
         {hasDiscount && <span className="sr-only">ahora </span>}
         {formatCOP(finalPrice)}
       </span>
       {/* En el detalle, el porcentaje va junto al precio */}
       {hasDiscount && size === 'lg' && (
-        <span className="bg-sale-ink px-2 py-0.5 text-xs font-bold text-white">
+        <span className="rounded-xs bg-sale-ink px-1.5 py-0.5 text-[0.625rem] font-bold text-white">
           -{discountPercent}%
         </span>
       )}

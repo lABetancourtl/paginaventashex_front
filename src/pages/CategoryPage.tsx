@@ -79,7 +79,7 @@ function CategoryPage() {
       <>
         <ul
           aria-busy={products.isPlaceholderData}
-          className={`grid grid-cols-2 gap-x-1 gap-y-6 transition-opacity md:grid-cols-4 md:gap-x-1.5 ${
+          className={`grid grid-cols-2 gap-x-3 gap-y-6 transition-opacity md:grid-cols-4 md:gap-x-4 ${
             products.isPlaceholderData ? 'opacity-50' : ''
           }`}
         >

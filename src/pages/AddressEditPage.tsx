@@ -44,7 +44,7 @@ function AddressEditPage() {
     return (
       <section>
         {header}
-        <div className="border border-line p-6 text-center md:p-10">
+        <div className="rounded-xl border border-card-line bg-white p-6 text-center md:p-10">
           <p className="text-ink-muted">No encontramos esta dirección.</p>
           <Link
             to="/cuenta/direcciones"
@@ -85,7 +85,7 @@ function AddressEditPage() {
     <section>
       {header}
 
-      <div className="border border-line p-6 md:p-10">
+      <div className="rounded-xl border border-card-line bg-white p-6 md:p-10">
         <AddressForm
           key={address.id}
           initialValues={toAddressFormValues(address)}

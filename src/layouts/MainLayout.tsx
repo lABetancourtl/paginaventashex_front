@@ -1,7 +1,8 @@
-import { Link, Outlet, ScrollRestoration, useMatches, useParams } from 'react-router'
+import { Link, Outlet, ScrollRestoration, useLocation, useMatches, useParams } from 'react-router'
 import { Search, ShoppingBag } from 'lucide-react'
 import { useEffect } from 'react'
 import { useHideOnScroll } from '../hooks/useHideOnScroll'
+import { useBottomEdgeColor } from '../hooks/useBottomEdgeColor'
 import LoginModal from '../features/auth/components/LoginModal'
 import UserMenu from '../features/account/components/UserMenu'
 import CategorySubnav from '../features/catalog/components/CategorySubnav'
@@ -14,9 +15,13 @@ import { useIsSaleView } from '../features/catalog/hooks/useIsSaleView'
 import { categoryPath } from '../features/catalog/catalogNav'
 import type { RouteHandle } from '../routes/routeHandle'
 import Footer from './Footer'
+import BrandLogo from './BrandLogo'
+import PageLoader from './PageLoader'
+import FooterDeepSea from './FooterDeepSea'
 
 function MainLayout() {
   const { slug } = useParams()
+  const { pathname } = useLocation()
   
   // ¿La ruta actual pidió ocupar todo el ancho?
   const matches = useMatches()
@@ -24,10 +29,17 @@ function MainLayout() {
     (match) => (match.handle as RouteHandle | undefined)?.fullWidth,
   )
 
+  const isFlushTop = matches.some(
+    (match) => (match.handle as RouteHandle | undefined)?.flushTop,
+  )
+
   const hideOnScroll = matches.some(
     (match) => (match.handle as RouteHandle | undefined)?.hideHeaderOnScroll,
   )
   const isHeaderHidden = useHideOnScroll(hideOnScroll)
+
+  // En celular, el fondo que asoma abajo toma el color de lo que esté en el borde (footer o página)
+  useBottomEdgeColor()
 
   // Publica el estado en <html>, para que otras partes de la página reaccionen con CSS
   useEffect(() => {
@@ -45,7 +57,7 @@ function MainLayout() {
     <div className="flex min-h-screen flex-col pt-14">
       <header
         className={[
-          'fixed inset-x-0 top-0 z-30 border-b border-white/10 text-white glass-dark',
+          'fixed inset-x-0 top-0 z-30 rounded-b-xl border-b border-white/10 text-white glass-dark',
           'transition-transform duration-500 motion-reduce:transition-none',
           // Solo con el foco del teclado: un clic con el mouse no lo mantiene visible
           'has-[:focus-visible]:translate-y-0 has-[:focus-visible]:delay-0',
@@ -81,12 +93,10 @@ function MainLayout() {
             )}
           </nav>
 
-          <Link
-            to="/"
-            className="order-3 flex-1 text-center text-sm font-extrabold uppercase tracking-wider focus-visible:outline-white md:order-none md:flex-none md:text-base"
-          >
-            Tisoro
-          </Link>
+          {/* Móvil: ocupa el espacio libre y centra la marca */}
+          <div className="order-3 flex flex-1 justify-center md:order-none md:flex-none">
+            <BrandLogo />
+          </div>
 
           <div className="contents md:flex md:flex-1 md:items-center md:justify-end md:gap-1">
             <div className="order-2 md:order-none">
@@ -117,15 +127,18 @@ function MainLayout() {
 
       <main
         className={`w-full flex-1 ${
-                    isFullWidth ? 'pt-4' : 'mx-auto max-w-6xl px-4 py-6 md:py-10'
+                    isFullWidth ? (isFlushTop ? '' : 'pt-4') : 'mx-auto max-w-6xl px-4 py-6 md:py-10'
         }`}
       >
         <Outlet />
       </main>
       
       <Footer />
+      {/* key: en cada página nueva, la medusa vuelve a salir con otra frase */}
+      <FooterDeepSea key={pathname} />
       <ScrollRestoration />
       <LoginModal />
+      <PageLoader />
     </div>
   )
 }

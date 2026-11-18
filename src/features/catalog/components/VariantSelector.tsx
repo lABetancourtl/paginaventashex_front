@@ -3,7 +3,7 @@ import { isAvailable } from '../variants'
 import type { ColorOption, SizeOption } from '../variants'
 import type { ProductVariant } from '../types'
 
-const legendClass = 'mb-3 text-xs font-bold uppercase tracking-wide'
+const legendClass = 'mb-3 text-[0.6875rem] font-bold uppercase tracking-wide'
 // El contorno del teclado se dibuja en la etiqueta cuando el radio oculto tiene el foco
 const focusClass = 'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary'
 
@@ -46,16 +46,20 @@ export function ColorPicker({ colors, variants, selectedId, onChange }: ColorPic
                 htmlFor={inputId}
                 title={available ? color.name : `${color.name} (agotado)`}
                 className={[
-                  'flex cursor-pointer items-center justify-center rounded-full ring-1 ring-line',
-                  'peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-canvas',
+                  // Círculos; el elegido con un aro oscuro separado del color
+                  'flex cursor-pointer items-center justify-center rounded-full border-2 border-transparent',
+                  'peer-checked:border-ink',
                   'peer-disabled:cursor-not-allowed peer-disabled:opacity-35',
                   focusClass,
-                  color.hex ? 'size-8' : 'px-3 py-1.5 text-xs font-medium',
+                  color.hex ? 'size-[2.125rem] p-[3px]' : 'h-[2.125rem] px-3.5 text-xs font-medium ring-1 ring-line-soft ring-inset',
                 ].join(' ')}
               >
                 {color.hex ? (
                   <>
-                    <span className="size-full rounded-full" style={{ backgroundColor: color.hex }} />
+                    <span
+                      className="size-full rounded-full shadow-[inset_0_0_0_1px_rgb(0_0_0/0.08)]"
+                      style={{ backgroundColor: color.hex }}
+                    />
                     <span className="sr-only">
                       {color.name}
                       {!available && ', agotado'}
@@ -85,18 +89,26 @@ interface SizePickerProps {
   onChange: (id: number) => void
 }
 
-// Línea diagonal de esquina a esquina para las tallas agotadas
-const crossedOut =
-  'peer-disabled:bg-[linear-gradient(to_top_left,transparent_calc(50%-0.5px),var(--color-line)_50%,transparent_calc(50%+0.5px))]'
-
 export function SizePicker({ sizes, variants, colorId, selectedId, onChange }: SizePickerProps) {
   const baseId = useId()
+  const selected = sizes.find((size) => size.id === selectedId)
 
   return (
-    <fieldset>
-      <legend className={legendClass}>Talla</legend>
+    <fieldset className="relative">
+      <legend className={legendClass}>
+        Talla
+        {selected && <span className="ml-2 font-normal normal-case text-ink-muted">{selected.name}</span>}
+      </legend>
 
-      <div className="flex flex-wrap gap-2">
+      {/* PROVISIONAL: la guía de tallas todavía no existe; aquí se abrirá cuando se cree */}
+      <button
+        type="button"
+        className="absolute top-0 right-0 text-[0.625rem] font-semibold uppercase tracking-wide underline underline-offset-2 hover:text-ink-muted"
+      >
+        Guía de tallas
+      </button>
+
+      <div className="grid grid-cols-6 gap-2">
         {sizes.map((size) => {
           const available = isAvailable(variants, { sizeId: size.id, colorId })
           const inputId = `${baseId}-${size.id}`
@@ -115,11 +127,11 @@ export function SizePicker({ sizes, variants, colorId, selectedId, onChange }: S
               <label
                 htmlFor={inputId}
                 className={[
-                  'flex h-10 min-w-12 cursor-pointer items-center justify-center border border-line px-3 text-xs font-semibold',
+                  'flex h-[2.625rem] cursor-pointer items-center justify-center rounded-lg border border-line-soft bg-white px-1 text-xs font-semibold',
                   'hover:border-ink',
                   'peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white',
-                  'peer-disabled:cursor-not-allowed peer-disabled:text-ink-muted/60 peer-disabled:hover:border-line',
-                  crossedOut,
+                  // Agotada: fondo crema, texto apagado y tachado
+                  'peer-disabled:cursor-not-allowed peer-disabled:bg-surface-soft peer-disabled:text-[#a9a095] peer-disabled:line-through peer-disabled:hover:border-line-soft',
                   focusClass,
                 ].join(' ')}
               >

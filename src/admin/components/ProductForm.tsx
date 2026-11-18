@@ -1,17 +1,35 @@
-import { useId, useState } from 'react'
-import type { ChangeEvent, FormEvent } from 'react'
-import FormField from '../../components/FormField'
-import { inputClass, readOnlyInputClass } from '../../components/formStyles'
+import { useEffect, useId, useState } from 'react'
+import type { ChangeEvent, FormEvent, ReactNode } from 'react'
+import { Link } from 'react-router'
+import { Check } from 'lucide-react'
 import { formatCOP } from '../../utils/formatters'
 import { filterActive } from '../../features/catalog/categoryTree'
 import type { AdminCategoryNode } from '../../features/catalog/types'
 import { validateProductForm } from '../productForm'
 import type { ProductFormErrors, ProductFormValues } from '../productForm'
-import { adminPrimaryButtonClass } from '../adminStyles'
+import AdminField, { AdminInputGroup } from './AdminField'
+import {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminReadOnlyClass,
+  adminSecondaryButtonClass,
+} from '../adminStyles'
 
-const fieldClass = `${inputClass} rounded-lg`
-const readOnlyClass = `${readOnlyInputClass} rounded-lg`
 const NUMERIC_FIELDS: (keyof ProductFormValues)[] = ['price', 'stock']
+const DESCRIPTION_MAX = 1000
+
+// Bloque del formulario: título y ayuda a la izquierda, campos a la derecha (si hay espacio)
+function FormSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 py-6 first:pt-0 last:pb-0 @3xl:grid-cols-[220px_minmax(0,1fr)] @3xl:gap-8">
+      <div>
+        <h3 className="text-sm font-semibold text-ink">{title}</h3>
+        <p className="mt-1 text-xs text-ink-muted">{description}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 @xl:grid-cols-2">{children}</div>
+    </div>
+  )
+}
 
 interface ProductFormProps {
   mode: 'create' | 'edit'
@@ -21,7 +39,12 @@ interface ProductFormProps {
   submitLabel: string
   isSaving: boolean
   serverError: string | null
-  onSubmit: (values: ProductFormValues) => void
+  savedNotice?: boolean // Muestra "Cambios guardados" junto al botón
+  cancelHref?: string
+  formId?: string // Permite enviar el formulario desde un botón externo (barra de guardado)
+  onDirtyChange?: (isDirty: boolean) => void
+  anotherLabel?: string // Botón extra, ej: "Crear y agregar otro"
+  onSubmit: (values: ProductFormValues, options: { another: boolean }) => void
 }
 
 function ProductForm({
@@ -32,6 +55,11 @@ function ProductForm({
   submitLabel,
   isSaving,
   serverError,
+  savedNotice = false,
+  cancelHref,
+  formId,
+  onDirtyChange,
+  anotherLabel,
   onSubmit,
 }: ProductFormProps) {
   const baseId = useId()
@@ -44,6 +72,16 @@ function ProductForm({
 
   // Solo se puede elegir una subcategoría activa con su principal activa
   const selectableRoots = filterActive(categories).filter((root) => root.children.length > 0)
+
+  // ¿Hay cambios sin guardar? (solo importa al editar)
+  const isDirty = (Object.keys(values) as (keyof ProductFormValues)[]).some(
+    (key) => values[key] !== initialValues[key],
+  )
+
+  // Avisa a la página para la barra de guardado y el aviso al salir
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -62,7 +100,9 @@ function ProductForm({
     const validation = validateProductForm(values, isCreate)
     setErrors(validation)
     if (Object.keys(validation).length > 0) return
-    onSubmit(values)
+    // ¿Qué botón lo envió? El de "agregar otro" lleva value="another"
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+    onSubmit(values, { another: submitter?.value === 'another' })
   }
 
   const ariaFor = (field: keyof ProductFormValues) => ({
@@ -71,146 +111,190 @@ function ProductForm({
   })
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <FormField id={fieldId('name')} label="Nombre" required error={errors.name}>
-          <input
-            id={fieldId('name')}
-            name="name"
-            type="text"
-            value={values.name}
-            onChange={handleChange}
-            maxLength={200}
-            disabled={isSaving}
-            className={fieldClass}
-            {...ariaFor('name')}
-          />
-        </FormField>
-      </div>
+    <form id={formId} onSubmit={handleSubmit} noValidate className="@container">
+      <div className="divide-y divide-admin-line">
+        <FormSection title="Información básica" description="El nombre y la descripción que verán los clientes.">
+          <div className="@xl:col-span-2">
+            <AdminField
+              id={fieldId('name')}
+              label="Nombre del producto"
+              required
+              error={errors.name}
+              aside={`${values.name.length}/200`}
+            >
+              <input
+                id={fieldId('name')}
+                name="name"
+                type="text"
+                value={values.name}
+                onChange={handleChange}
+                maxLength={200}
+                placeholder="Ej: Pijama de algodón para niño"
+                disabled={isSaving}
+                className={adminInputClass}
+                {...ariaFor('name')}
+              />
+            </AdminField>
+          </div>
 
-      <div className="sm:col-span-2">
-        <FormField
-          id={fieldId('description')}
-          label="Descripción"
-          error={errors.description}
-          hint={`${values.description.length}/1000 caracteres`}
+          <div className="@xl:col-span-2">
+            <AdminField
+              id={fieldId('description')}
+              label="Descripción"
+              error={errors.description}
+              aside={`${values.description.length}/${DESCRIPTION_MAX}`}
+            >
+              <textarea
+                id={fieldId('description')}
+                name="description"
+                value={values.description}
+                onChange={handleChange}
+                maxLength={DESCRIPTION_MAX}
+                rows={5}
+                placeholder="Materiales, cuidados, detalles del diseño…"
+                disabled={isSaving}
+                className={`${adminInputClass} resize-y leading-relaxed`}
+                {...ariaFor('description')}
+              />
+            </AdminField>
+          </div>
+        </FormSection>
+
+        <FormSection
+          title={isCreate ? 'Precio e inventario' : 'Precio'}
+          description={
+            isCreate
+              ? 'El precio de venta y las unidades de la primera variante. Después podrás agregar tallas y colores.'
+              : 'El precio de venta antes de descuentos.'
+          }
         >
-          <textarea
-            id={fieldId('description')}
-            name="description"
-            value={values.description}
-            onChange={handleChange}
-            maxLength={1000}
-            rows={4}
-            disabled={isSaving}
-            className={`${fieldClass} resize-y`}
-            {...ariaFor('description')}
-          />
-        </FormField>
-      </div>
-
-      <FormField
-        id={fieldId('price')}
-        label="Precio (COP)"
-        required
-        error={errors.price}
-        hint={values.price ? formatCOP(Number(values.price)) : 'Sin puntos ni comas: 34000'}
-      >
-        <input
-          id={fieldId('price')}
-          name="price"
-          type="text"
-          inputMode="numeric"
-          value={values.price}
-          onChange={handleChange}
-          disabled={isSaving}
-          className={fieldClass}
-          {...ariaFor('price')}
-        />
-      </FormField>
-
-      {isCreate && (
-        <FormField
-          id={fieldId('sku')}
-          label="SKU"
-          required
-          error={errors.sku}
-          hint="Será el SKU de la primera variante."
-        >
-          <input
-            id={fieldId('sku')}
-            name="sku"
-            type="text"
-            value={values.sku}
-            onChange={handleChange}
-            maxLength={50}
-            disabled={isSaving}
-            className={`${fieldClass} font-mono`}
-            {...ariaFor('sku')}
-          />
-        </FormField>
-      )}
-
-      {isCreate && (
-        <FormField
-          id={fieldId('stock')}
-          label="Unidades disponibles"
-          required
-          error={errors.stock}
-          hint="Las de la primera variante. Después podrás agregar tallas y colores."
-        >
-          <input
-            id={fieldId('stock')}
-            name="stock"
-            type="text"
-            inputMode="numeric"
-            value={values.stock}
-            onChange={handleChange}
-            disabled={isSaving}
-            className={fieldClass}
-            {...ariaFor('stock')}
-          />
-        </FormField>
-      )}
-
-      {isCreate ? (
-        <FormField id={fieldId('categoryId')} label="Subcategoría" required error={errors.categoryId}>
-          <select
-            id={fieldId('categoryId')}
-            name="categoryId"
-            value={values.categoryId}
-            onChange={handleChange}
-            disabled={isSaving}
-            className={fieldClass}
-            {...ariaFor('categoryId')}
+          <AdminField
+            id={fieldId('price')}
+            label="Precio"
+            required
+            error={errors.price}
+            hint={values.price ? formatCOP(Number(values.price)) : 'Sin puntos ni comas: 34000'}
           >
-            <option value="" disabled hidden>
-              Elige una subcategoría
-            </option>
-            {selectableRoots.map((root) => (
-              <optgroup key={root.id} label={root.name}>
-                {root.children.map((child) => (
-                  <option key={child.id} value={child.id}>
-                    {child.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </FormField>
-      ) : (
-        <FormField id={fieldId('categoryId')} label="Subcategoría" hint="No se puede cambiar.">
-          <input id={fieldId('categoryId')} type="text" value={categoryName ?? ''} readOnly className={readOnlyClass} />
-        </FormField>
-      )}
+            <AdminInputGroup prefix="$" suffix="COP">
+              <input
+                id={fieldId('price')}
+                name="price"
+                type="text"
+                inputMode="numeric"
+                value={values.price}
+                onChange={handleChange}
+                placeholder="0"
+                disabled={isSaving}
+                className={`${adminInputClass} pl-7 pr-12 tabular-nums`}
+                {...ariaFor('price')}
+              />
+            </AdminInputGroup>
+          </AdminField>
 
-      <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row sm:items-center sm:justify-end">
-        {serverError && (
-          <p role="alert" className="text-sm text-danger sm:mr-auto">
-            {serverError}
-          </p>
+          {isCreate && (
+            <AdminField id={fieldId('sku')} label="SKU" required error={errors.sku} hint="Código único de la primera variante.">
+              <input
+                id={fieldId('sku')}
+                name="sku"
+                type="text"
+                value={values.sku}
+                onChange={handleChange}
+                maxLength={50}
+                placeholder="Ej: PIJ-NINO-001"
+                disabled={isSaving}
+                className={`${adminInputClass} font-mono uppercase`}
+                {...ariaFor('sku')}
+              />
+            </AdminField>
+          )}
+
+          {isCreate && (
+            <AdminField id={fieldId('stock')} label="Unidades disponibles" required error={errors.stock}>
+              <AdminInputGroup suffix="und.">
+                <input
+                  id={fieldId('stock')}
+                  name="stock"
+                  type="text"
+                  inputMode="numeric"
+                  value={values.stock}
+                  onChange={handleChange}
+                  placeholder="0"
+                  disabled={isSaving}
+                  className={`${adminInputClass} pr-12 tabular-nums`}
+                  {...ariaFor('stock')}
+                />
+              </AdminInputGroup>
+            </AdminField>
+          )}
+        </FormSection>
+
+        <FormSection title="Organización" description="La subcategoría donde se mostrará en la tienda.">
+          {isCreate ? (
+            <AdminField id={fieldId('categoryId')} label="Subcategoría" required error={errors.categoryId}>
+              <select
+                id={fieldId('categoryId')}
+                name="categoryId"
+                value={values.categoryId}
+                onChange={handleChange}
+                disabled={isSaving}
+                className={adminInputClass}
+                {...ariaFor('categoryId')}
+              >
+                <option value="" disabled hidden>
+                  Elige una subcategoría
+                </option>
+                {selectableRoots.map((root) => (
+                  <optgroup key={root.id} label={root.name}>
+                    {root.children.map((child) => (
+                      <option key={child.id} value={child.id}>
+                        {child.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </AdminField>
+          ) : (
+            <AdminField id={fieldId('categoryId')} label="Subcategoría" hint="No se puede cambiar.">
+              <input
+                id={fieldId('categoryId')}
+                type="text"
+                value={categoryName ?? ''}
+                readOnly
+                className={adminReadOnlyClass}
+              />
+            </AdminField>
+          )}
+        </FormSection>
+      </div>
+
+      {/* Pie con las acciones */}
+      <div className="-mx-5 -mb-5 mt-6 flex flex-col gap-3 rounded-b-2xl border-t border-admin-line bg-admin-bg/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+        <div className="text-sm sm:mr-auto">
+          {serverError ? (
+            <p role="alert" className="text-danger">
+              {serverError}
+            </p>
+          ) : savedNotice && !isDirty ? (
+            <p role="status" className="inline-flex items-center gap-1.5 text-green-700">
+              <Check size={15} strokeWidth={2} aria-hidden="true" />
+              Cambios guardados
+            </p>
+          ) : !isCreate && isDirty ? (
+            <p className="text-ink-muted">Tienes cambios sin guardar.</p>
+          ) : null}
+        </div>
+        {cancelHref && (
+          <Link to={cancelHref} className={adminSecondaryButtonClass}>
+            Cancelar
+          </Link>
         )}
-        <button type="submit" disabled={isSaving} className={adminPrimaryButtonClass}>
+        {anotherLabel && (
+          <button type="submit" value="another" disabled={isSaving} className={adminSecondaryButtonClass}>
+            {anotherLabel}
+          </button>
+        )}
+        <button type="submit" disabled={isSaving || (!isCreate && !isDirty)} className={adminPrimaryButtonClass}>
           {isSaving ? 'Guardando...' : submitLabel}
         </button>
       </div>

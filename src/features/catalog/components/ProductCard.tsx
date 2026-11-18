@@ -27,8 +27,14 @@ function ProductImage({ url, alt }: ProductImageProps) {
   )
 }
 
+// Lo mínimo para pintar la tarjeta: sirve para el catálogo y para los estantes del inicio
+export type ProductCardData = Pick<
+  Product,
+  'id' | 'name' | 'price' | 'finalPrice' | 'discountPercent' | 'catalogMainUrl' | 'catalogHoverUrl' | 'inStock'
+> & { categoryName?: string }
+
 interface ProductCardProps {
-  product: Product
+  product: ProductCardData
 }
 
 function ProductCard({ product }: ProductCardProps) {
@@ -38,7 +44,7 @@ function ProductCard({ product }: ProductCardProps) {
     <article className="group">
       <Link to={`/producto/${product.id}`} className="block">
         {/* Cuadrado, como las fotos: sin espacio sobrante arriba ni abajo */}
-        <div className="relative aspect-square overflow-hidden">
+        <div className="relative aspect-square overflow-hidden rounded-xl">
           {mainUrl && hoverUrl ? (
             <div className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:block md:overflow-hidden">
               <div className="size-full shrink-0 snap-start md:absolute md:inset-0 md:transition-opacity md:duration-300 md:group-hover:opacity-0">
@@ -62,13 +68,20 @@ function ProductCard({ product }: ProductCardProps) {
             <span className="absolute left-2 top-2 bg-ink/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               Agotado
             </span>
-        )}
+          )}
         </div>
 
-        {/* Se ve la subcategoría en singular; el nombre completo queda para lectores de pantalla */}
+        {/* Se ve la subcategoría en singular; el nombre completo queda para lectores de pantalla.
+            Sin subcategoría (estantes del inicio), se muestra el nombre */}
         <h3 className="mt-3 px-1 text-xs font-bold uppercase tracking-wide">
-          {toSingular(product.categoryName)}
-          <span className="sr-only">: {product.name}</span>
+          {product.categoryName ? (
+            <>
+              {toSingular(product.categoryName)}
+              <span className="sr-only">: {product.name}</span>
+            </>
+          ) : (
+            product.name
+          )}
         </h3>
 
         <div className="mt-1 px-1">

@@ -3,10 +3,110 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: en Android, Chrome dibuja la página siempre hasta el borde inferior.
+         Sin esto, la barra de gestos se pinta blanca cuando se ve la barra de dirección
+         y transparente cuando se esconde (una franja blanca que aparece y desaparece).
+         El contenido pegado abajo se separa con env(safe-area-inset-bottom) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>PaginaVentasNet</title>
+
+    <!-- Animación de carga: va aquí (y no en el CSS de la app) para que salga
+         antes de que se descargue JavaScript. La oculta src/layouts/pageLoader.ts -->
+    <style>
+      .page-loader {
+        --loader-bg: #FBF6EE; /* Fondo de la tienda (--color-canvas) */
+        --loader-ink: #355C5D; /* Color del header (--color-header) */
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--loader-bg);
+        opacity: 1;
+        visibility: visible;
+        transition: opacity .45s ease, visibility 0s linear 0s;
+      }
+      .page-loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .45s ease, visibility 0s linear .45s;
+      }
+      .page-loader svg {
+        width: 96px;
+        height: 96px;
+        overflow: visible;
+        fill: none;
+        stroke: var(--loader-ink);
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .page-loader .loader-dot { fill: var(--loader-ink); stroke: none; }
+      .page-loader .loader-whale,
+      .page-loader .loader-spout { transform-box: fill-box; transform-origin: center; }
+      .page-loader .loader-spout { transform-origin: center bottom; }
+      .page-loader .loader-whale { animation: loader-swim 1.8s ease-in-out infinite; }
+      .page-loader .loader-spout { animation: loader-spout 1.8s ease-out infinite; }
+      .page-loader .loader-sea { animation: loader-sea 1.2s linear infinite; }
+      .page-loader .loader-drop { animation: loader-drop 1.8s ease-out infinite; opacity: 0; }
+      .page-loader .loader-drop + .loader-drop { animation-delay: .15s; }
+      @keyframes loader-swim {
+        0%, 100% { transform: translate(0, 0) rotate(0); }
+        30% { transform: translate(0, -6px) rotate(-6deg); }
+        65% { transform: translate(0, 2px) rotate(3deg); }
+      }
+      @keyframes loader-spout {
+        0%, 100% { transform: scale(1); }
+        20% { transform: scale(1.25, 1.55); }
+        40% { transform: scale(.95); }
+      }
+      @keyframes loader-sea {
+        from { transform: translateX(0); }
+        to { transform: translateX(-30px); }
+      }
+      @keyframes loader-drop {
+        0%, 15% { opacity: 0; transform: translateY(0); }
+        25% { opacity: 1; }
+        50% { opacity: 0; transform: translateY(-12px); }
+        100% { opacity: 0; }
+      }
+      /* Con "reducir movimiento": la misma animación, mucho más lenta */
+      @media (prefers-reduced-motion: reduce) {
+        .page-loader * { animation-duration: 3s !important; }
+      }
+    </style>
   </head>
   <body>
+    <div id="page-loader" class="page-loader" role="status" aria-label="Cargando">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <clipPath id="loader-sea-clip"><rect x="6" y="90" width="108" height="30" /></clipPath>
+        </defs>
+        <g class="loader-whale" transform="translate(0,-8)">
+          <path d="M16 70 C16 50 36 42 56 44 C78 46 90 60 96 66 L104 52 C107 47 113 50 111 56 L106 70 L112 78 C114 83 108 85 104 82 L96 76 C84 90 60 94 42 90 C26 86 16 80 16 70 Z" />
+          <g class="loader-spout">
+            <path d="M44 38 C44 28 38 24 32 25" />
+            <path d="M44 38 C44 28 50 24 56 25" />
+          </g>
+          <circle class="loader-drop loader-dot" cx="30" cy="18" r="2.5" />
+          <circle class="loader-drop loader-dot" cx="58" cy="18" r="2.5" />
+          <circle class="loader-dot" cx="34" cy="62" r="4.5" />
+        </g>
+        <g clip-path="url(#loader-sea-clip)">
+          <path class="loader-sea" d="M-20 104 c10 -8 20 8 30 0 c10 -8 20 8 30 0 c10 -8 20 8 30 0 c10 -8 20 8 30 0 c10 -8 20 8 30 0 c10 -8 20 8 30 0" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Seguro: si la app falla al arrancar, la animación no tapa la página para siempre -->
+    <script>
+      setTimeout(function () {
+        var loader = document.getElementById('page-loader')
+        if (loader) loader.classList.add('is-hidden')
+      }, 10000)
+    </script>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

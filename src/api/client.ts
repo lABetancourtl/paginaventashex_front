@@ -60,7 +60,11 @@ function toApiRequestError(error: unknown): ApiRequestError {
   if (status === 404) {
     return new ApiRequestError('El recurso solicitado no existe.', 'NOT_FOUND', status)
   }
-    if (status === 429) {
+  // El servidor corta el cuerpo antes de llegar a la API: no trae el formato estándar
+  if (status === 413) {
+    return new ApiRequestError('El archivo es demasiado grande para subirlo.', 'PAYLOAD_TOO_LARGE', status)
+  }
+  if (status === 429) {
     return new ApiRequestError(
       'Demasiados intentos. Espera un momento antes de volver a intentar.',
       'TOO_MANY_REQUESTS',

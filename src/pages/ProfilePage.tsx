@@ -1,8 +1,8 @@
 import { Link } from 'react-router'
-import { Pencil } from 'lucide-react'
 import { useProfile } from '../features/profile/hooks/useProfile'
 import ProfileDetails from '../features/profile/components/ProfileDetails'
 import AccountSectionHeader from '../features/account/components/AccountSectionHeader'
+import { accountCardClass, accountLinkClass } from '../features/account/accountStyles'
 
 function ProfilePage() {
   const { data: profile, isPending, error } = useProfile()
@@ -19,13 +19,14 @@ function ProfilePage() {
     <section>
       <AccountSectionHeader title="Perfil" />
 
-      <div className="relative border border-line p-6 md:p-10">
+      {/* "Editar" en la esquina superior derecha de la tarjeta */}
+      <div className={`${accountCardClass} relative`}>
         <Link
           to="/cuenta/perfil/editar"
           aria-label="Editar perfil"
-          className="absolute right-4 top-4 p-2 text-ink-muted hover:text-ink md:right-6 md:top-6"
+          className={`${accountLinkClass} absolute top-5.5 right-6`}
         >
-          <Pencil size={20} strokeWidth={1.5} aria-hidden="true" />
+          Editar
         </Link>
 
         <ProfileDetails profile={profile} />

@@ -33,7 +33,7 @@ function CategorySubnav({ hidden = false }: CategorySubnavProps) {
     <nav
       aria-label={`Subcategorías de ${root.name}`}
       className={[
-        'sticky top-14 z-20 border-b border-line bg-canvas/95 backdrop-blur-md',
+        'sticky top-14 z-20 rounded-b-xl border-b border-line bg-canvas/95 backdrop-blur-md',
         'transition-transform duration-500 motion-reduce:transition-none',
         'has-[:focus-visible]:translate-y-0 has-[:focus-visible]:delay-0',
         // Esconder: sale primero · Mostrar: espera al header

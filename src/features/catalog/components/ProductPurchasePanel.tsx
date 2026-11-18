@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { primaryButtonClass } from '../../../components/formStyles'
 import { findVariant, getColorOptions, getSizeOptions, isAvailable } from '../variants'
 import type { ProductDetail } from '../types'
 import { ColorPicker, SizePicker } from './VariantSelector'
@@ -35,7 +34,7 @@ function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
 
   // ─── Disponibilidad ───────────────────────────────────────
   let stockText = 'Disponible'
-  let stockClass = 'text-ink-muted'
+  let stockClass = 'text-sale-ink'
 
   if (!product.inStock || (selected && selected.stock <= 0)) {
     stockText = 'Agotado'
@@ -53,7 +52,7 @@ function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
   else if (selected && selected.stock <= 0) buttonLabel = 'Agotado'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {colors.length > 0 && (
         <ColorPicker colors={colors} variants={variants} selectedId={colorId} onChange={handleColorChange} />
       )}
@@ -68,17 +67,23 @@ function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
         />
       )}
 
-      <div>
-        <p role="status" className={`text-sm font-medium ${stockClass}`}>
+      <div className="space-y-2.5">
+        {/* Disponibilidad con un punto del mismo color */}
+        <p role="status" className={`flex items-center gap-1.5 text-xs font-medium ${stockClass}`}>
+          <span aria-hidden="true" className="size-[7px] rounded-full bg-current" />
           {stockText}
         </p>
 
         {/* PROVISIONAL: se activa cuando construyamos el carrito */}
-        <button type="button" disabled className={`${primaryButtonClass} mt-3`}>
+        <button
+          type="button"
+          disabled
+          className="h-[3.125rem] w-full rounded-lg bg-footer px-6 text-xs font-bold uppercase tracking-[0.08em] text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           {buttonLabel}
         </button>
 
-        {selected && <p className="mt-3 text-xs text-ink-muted">Ref. {selected.sku}</p>}
+        {selected && <p className="text-[0.625rem] text-ink-muted">Ref. {selected.sku}</p>}
       </div>
     </div>
   )

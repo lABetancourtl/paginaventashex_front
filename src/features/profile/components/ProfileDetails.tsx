@@ -24,8 +24,8 @@ function DetailItem({ label, value, wide = false }: DetailItemProps) {
 
   return (
     <div className={wide ? 'sm:col-span-2' : undefined}>
-      <dt className="text-xs font-bold uppercase tracking-wide">{label}</dt>
-      <dd className={`mt-1.5 break-words ${isEmpty ? 'italic text-ink-muted/70' : 'text-ink-muted'}`}>
+      <dt className="text-[0.625rem] font-bold uppercase tracking-wider text-ink-muted">{label}</dt>
+      <dd className={`mt-1.5 break-words text-sm ${isEmpty ? 'italic text-ink-muted/70' : 'font-medium text-ink'}`}>
         {value}
       </dd>
     </div>
@@ -35,7 +35,7 @@ function DetailItem({ label, value, wide = false }: DetailItemProps) {
 // ─── La lista completa ──────────────────────────────────────
 function ProfileDetails({ profile }: ProfileDetailsProps) {
   return (
-    <dl className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2">
+    <dl className="grid grid-cols-1 gap-x-10 gap-y-6 pr-12 sm:grid-cols-2">
       <DetailItem label="Nombre" value={showValue(profile.nombre)} />
       <DetailItem label="Apellido" value={showValue(profile.apellido)} />
       <DetailItem label="Email" value={profile.email} wide />

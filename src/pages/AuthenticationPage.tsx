@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { CircleCheck } from 'lucide-react'
 import BackHeader from '../components/BackHeader'
-import { primaryButtonClass } from '../components/formStyles'
 import { useAuth } from '../features/auth/hooks/useAuth'
 import { useSendOtp } from '../features/auth/hooks/useSendOtp'
 import { useProfile } from '../features/profile/hooks/useProfile'
@@ -9,6 +8,7 @@ import { useSetPassword } from '../features/profile/hooks/useSetPassword'
 import NewPasswordForm from '../features/profile/components/NewPasswordForm'
 import type { SetPasswordRequest } from '../features/profile/types'
 import AccountSectionHeader from '../features/account/components/AccountSectionHeader'
+import { accountCardClass, accountPrimaryButtonClass } from '../features/account/accountStyles'
 
 type Mode = 'view' | 'set' | 'change'
 
@@ -83,7 +83,7 @@ function AuthenticationPage() {
           onBack={cancel}
         />
 
-        <div className="border border-line p-6 md:p-10">
+        <div className={accountCardClass}>
           <p className="mb-6 text-sm text-ink-muted">
             Enviamos un código a{' '}
             <strong className="break-all font-semibold text-ink">{email}</strong>. Escríbelo
@@ -110,19 +110,37 @@ function AuthenticationPage() {
   // ─── Vista ────────────────────────────────────────────────
   return (
     <section>
-      <AccountSectionHeader title="Autenticación" desktopTitle />
+      <AccountSectionHeader title="Autenticación" />
 
-      <div className="border border-line p-6 md:p-10">
-        <h3 className="font-semibold">Contraseña</h3>
+      <div className={accountCardClass}>
+        {/* Contraseña a la izquierda y el botón a la derecha (abajo en celular) */}
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div>
+            <h3 className="text-[0.625rem] font-bold uppercase tracking-wider text-ink-muted">Contraseña</h3>
 
-        {profile.tienePassword ? (
-          <p className="mt-1 text-ink-muted">
-            <span aria-hidden="true">••••••••••••</span>
-            <span className="sr-only">Tienes una contraseña definida.</span>
-          </p>
-        ) : (
-          <p className="mt-1 text-ink-muted">Todavía no tienes una contraseña definida.</p>
-        )}
+            {profile.tienePassword ? (
+              <p className="mt-1.5 text-base font-bold tracking-[0.2em]">
+                <span aria-hidden="true">••••••••••</span>
+                <span className="sr-only">Tienes una contraseña definida.</span>
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[0.9375rem] text-ink-muted">Todavía no tienes una contraseña definida.</p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={profile.tienePassword ? startChange : startSet}
+            disabled={sendOtp.isPending}
+            className={`${accountPrimaryButtonClass} h-11 w-full px-6 sm:w-auto`}
+          >
+            {sendOtp.isPending
+              ? 'Enviando código...'
+              : profile.tienePassword
+                ? 'Modificar contraseña'
+                : 'Definir contraseña'}
+          </button>
+        </div>
 
         {successMessage && (
           <p role="status" className="mt-4 flex items-center gap-2 text-sm font-medium">
@@ -136,19 +154,6 @@ function AuthenticationPage() {
             {sendOtp.error.message}
           </p>
         )}
-
-        <button
-          type="button"
-          onClick={profile.tienePassword ? startChange : startSet}
-          disabled={sendOtp.isPending}
-          className={`${primaryButtonClass} mt-6 sm:w-80`}
-        >
-          {sendOtp.isPending
-            ? 'Enviando código...'
-            : profile.tienePassword
-              ? 'Modificar contraseña'
-              : 'Definir contraseña'}
-        </button>
       </div>
     </section>
   )

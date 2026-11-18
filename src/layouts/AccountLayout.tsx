@@ -3,13 +3,11 @@ import AccountNav from '../features/account/components/AccountNav'
 
 function AccountLayout() {
   return (
-    <div className="md:grid md:grid-cols-[14rem_1fr] md:gap-10">
-      {/* Menú lateral: solo desde tablet */}
-      <aside className="hidden md:block">
-        <AccountNav />
-      </aside>
+    <div className="mx-auto flex w-full max-w-[60rem] flex-col gap-7">
+      <AccountNav />
 
-      <div>
+      {/* Alto mínimo fijo: al cambiar de pestaña la página y el footer no saltan */}
+      <div className="min-h-[27.5rem]">
         <Outlet />
       </div>
     </div>

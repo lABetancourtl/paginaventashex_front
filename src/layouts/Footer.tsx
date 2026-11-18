@@ -76,7 +76,7 @@ function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="bg-footer text-white">
+    <footer className="rounded-t-3xl bg-footer text-white">
       <div className="mx-auto max-w-5xl px-6 pb-8 pt-12 md:pt-16">
         <p className="text-center text-lg font-extrabold uppercase tracking-widest">{SITE_NAME}</p>
 
@@ -136,7 +136,7 @@ function Footer() {
 
       {/* Franja inferior: derechos y enlaces legales */}
       <div className="border-t border-white/15">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 py-5 text-[11px] uppercase tracking-wide text-white/80 md:flex-row md:justify-between">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-5 text-[11px] uppercase tracking-wide text-white/80 md:flex-row md:justify-between">
           <p>
             © {year} {SITE_NAME}. Todos los derechos reservados.
           </p>

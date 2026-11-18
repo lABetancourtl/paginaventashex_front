@@ -1,14 +1,11 @@
 import { NavLink, useNavigate } from 'react-router'
-import { LogOut } from 'lucide-react'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { useProfile } from '../../profile/hooks/useProfile'
 import { getDisplayName } from '../../../utils/formatters'
 import { getAccountLinks } from '../accountLinks'
 import UserAvatar from '../../../components/UserAvatar'
 
-// En celular las opciones son más altas, para tocarlas fácil con el dedo
-const itemBase = 'flex items-center gap-3 py-3.5 text-sm uppercase tracking-wide md:py-2.5'
-
+// Cabecera de Mi cuenta: franja menta con el saludo y, debajo, las pestañas de las secciones
 function AccountNav() {
   const { session, logout } = useAuth()
   const { data: profile } = useProfile()
@@ -19,44 +16,48 @@ function AccountNav() {
     navigate('/')
   }
 
-  const displayName = session ? getDisplayName(profile?.nombre, session.email) : ''
+  const email = session?.email ?? ''
+  const displayName = session ? getDisplayName(profile?.nombre, email) : ''
 
   return (
-    <div>
-      <div className="mb-6 flex items-center gap-3">
-        {session && (
-          <UserAvatar seed={session.email} size={44} animate="always" className="ring-1 ring-line" />
-        )}
-        <h2 className="min-w-0 truncate text-lg font-extrabold uppercase tracking-wide">
-          Hola, {displayName}
-        </h2>
+    <div className="flex flex-col gap-6">
+      {/* Franja con avatar, saludo y email; "Cerrar sesión" a la derecha */}
+      <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-4 rounded-2xl bg-mint px-5 py-6 md:px-8 md:py-7">
+        <div className="flex min-w-0 items-center gap-4">
+          {session && <UserAvatar seed={email} size={56} animate="always" className="bg-white" />}
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="truncate text-lg font-bold uppercase tracking-wide md:text-xl">Hola, {displayName}</h2>
+            <p className="truncate text-[0.8125rem] text-[#3d5752]">{email}</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="text-[0.6875rem] font-bold uppercase tracking-wider text-footer underline underline-offset-2 hover:opacity-75"
+        >
+          Cerrar sesión
+        </button>
       </div>
 
-      <nav aria-label="Mi cuenta">
-        <ul>
-          {getAccountLinks(session?.rol).map(({ to, label, icon: Icon }) => (
-            <li key={to}>
+      {/* Pestañas: la activa en negro con subrayado verde oscuro.
+        En celular, si no caben, se desplazan de lado */}
+      <nav aria-label="Mi cuenta" className="border-b border-line-soft">
+        <ul className="-mb-px flex gap-7 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {getAccountLinks(session?.rol).map(({ to, label }) => (
+            <li key={to} className="shrink-0">
               <NavLink
                 to={to}
                 className={({ isActive }) =>
-                  `${itemBase} ${isActive ? 'font-bold' : 'font-medium text-ink/80 hover:text-ink'}`
+                  `block border-b-2 pb-3 text-xs font-bold uppercase tracking-wide transition-colors ${
+                    isActive ? 'border-footer text-ink' : 'border-transparent text-ink-muted hover:text-ink'
+                  }`
                 }
               >
-                <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                <span>{label}</span>
+                {label}
               </NavLink>
             </li>
           ))}
-          <li>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className={`${itemBase} font-medium text-ink/80 hover:text-ink`}
-            >
-              <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
-              <span>Cerrar sesión</span>
-            </button>
-          </li>
         </ul>
       </nav>
     </div>

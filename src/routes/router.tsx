@@ -23,13 +23,14 @@ const AdminCategoriesPage = lazy(() => import('../admin/pages/AdminCategoriesPag
 const AdminProductsPage = lazy(() => import('../admin/pages/AdminProductsPage'))
 const AdminProductCreatePage = lazy(() => import('../admin/pages/AdminProductCreatePage'))
 const AdminProductEditPage = lazy(() => import('../admin/pages/AdminProductEditPage'))
+const AdminHomeEditorPage = lazy(() => import('../admin/pages/AdminHomeEditorPage'))
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <MainLayout />,
     children: [
-      { index: true, element: <HomePage /> },
+      { index: true, element: <HomePage />, handle: { fullWidth: true, flushTop: true } },
       {
         path: 'categoria/:slug',
         element: <CategoryPage />,
@@ -80,6 +81,8 @@ export const router = createBrowserRouter([
       { path: 'productos/nuevo', element: <AdminProductCreatePage /> },
       { path: 'productos/:id', element: <AdminProductEditPage /> },
       { path: 'categorias', element: <AdminCategoriesPage /> },
+      // Un solo editor: el :id opcional solo indica qué bloque está seleccionado
+      { path: 'inicio/:id?', element: <AdminHomeEditorPage />, handle: { adminFullBleed: true } },
       { path: 'pedidos', element: <AdminPlaceholderPage title="Pedidos" /> },
     ],
   },

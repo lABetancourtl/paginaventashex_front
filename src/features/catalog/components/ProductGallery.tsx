@@ -36,7 +36,7 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[3/4] items-center justify-center bg-surface text-sm text-ink-muted">
+      <div className="flex aspect-[4/5] items-center justify-center rounded-xl bg-surface-soft text-sm text-ink-muted">
         Este producto aún no tiene imágenes.
       </div>
     )
@@ -51,7 +51,7 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
           // Celular: carrusel horizontal que se acomoda en cada imagen
           'flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           // Computador: grilla de dos columnas
-          'md:grid md:grid-cols-2 md:gap-1.5 md:overflow-visible',
+          'md:grid md:grid-cols-2 md:gap-3 md:overflow-visible',
         ].join(' ')}
       >
         {images.map((url, index) => (
@@ -60,7 +60,8 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
             {...(index === 0 ? { [HIDE_HEADER_ANCHOR]: '' } : {})}
             aria-roledescription="imagen"
             aria-label={`${index + 1} de ${images.length}`}
-            className="aspect-[3/4] w-full shrink-0 snap-start bg-surface md:aspect-auto md:h-[calc(100vh-4.5rem)] md:w-auto"
+            // Cada foto en su tarjeta redondeada, con el color original de la imagen
+            className="aspect-[4/5] w-full shrink-0 snap-start overflow-hidden rounded-xl bg-surface md:w-auto"
           >
             <img
               src={cloudinaryUrl(url, 1000)}
