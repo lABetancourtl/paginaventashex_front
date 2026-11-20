@@ -9,8 +9,10 @@ import {
   getHomeItems,
   getHomeProducts,
   getHomeSections,
+  removeHomeItemMobile,
   reorderHomeItem,
   reorderHomeSection,
+  setHomeItemMobile,
   setHomeProducts,
   updateHomeItemLink,
   updateHomeSection,
@@ -171,6 +173,23 @@ export function useDeleteHomeItem(sectionId: number) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (itemId: number) => deleteHomeItem(sectionId, itemId),
+    onSuccess: () => invalidateHome(queryClient),
+  })
+}
+
+export function useSetHomeItemMobile(sectionId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ itemId, file, onProgress }: { itemId: number; file: File; onProgress?: (percent: number) => void }) =>
+      setHomeItemMobile(sectionId, itemId, file, onProgress),
+    onSuccess: () => invalidateHome(queryClient),
+  })
+}
+
+export function useRemoveHomeItemMobile(sectionId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (itemId: number) => removeHomeItemMobile(sectionId, itemId),
     onSuccess: () => invalidateHome(queryClient),
   })
 }

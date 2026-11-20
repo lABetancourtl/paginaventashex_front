@@ -4,8 +4,8 @@ import { useAuth } from '../../features/auth/hooks/useAuth'
 import { adminLinks } from '../adminLinks'
 import UserAvatar from '../../components/UserAvatar'
 
-const itemBase = 'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors'
-const inactiveClass = 'text-ink-muted hover:bg-admin-bg hover:text-ink'
+const itemBase = 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors'
+const inactiveClass = 'text-[#5d5c57] hover:bg-admin-hover hover:text-admin-ink'
 
 interface AdminNavProps {
   onNavigate?: () => void
@@ -31,13 +31,13 @@ function AdminNav({ onNavigate }: AdminNavProps) {
                 end={end}
                 onClick={onNavigate}
                 className={({ isActive }) =>
-                  `${itemBase} ${isActive ? 'bg-admin-accent/10 text-admin-accent' : inactiveClass}`
+                  `${itemBase} ${isActive ? 'bg-admin-active font-semibold text-admin-ink' : inactiveClass}`
                 }
               >
-                <Icon size={20} strokeWidth={1.6} aria-hidden="true" />
+                <Icon size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
                 <span className="min-w-0">
                   <span className="block">{label}</span>
-                  <span className="block truncate text-xs font-normal text-ink-muted">{description}</span>
+                  <span className="block truncate text-xs font-normal text-[#8b8a84]">{description}</span>
                 </span>
               </NavLink>
             </li>

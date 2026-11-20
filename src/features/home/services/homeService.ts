@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPatch, apiPost, apiPostForm, apiPut } from '../../../api/client'
+import { apiDelete, apiGet, apiPatch, apiPost, apiPostForm, apiPut, apiPutForm } from '../../../api/client'
 import type {
   CreateHomeSectionRequest,
   HomeItemAdmin,
@@ -85,6 +85,22 @@ export async function reorderHomeItem(sectionId: number, itemId: number, newDisp
 
 export async function deleteHomeItem(sectionId: number, itemId: number): Promise<void> {
   await apiDelete<unknown>(`${itemsUrl(sectionId)}/${itemId}`)
+}
+
+// Versión para celular (4:5) de un medio. Solo se permite con un banner de un único medio
+export function setHomeItemMobile(
+  sectionId: number,
+  itemId: number,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<HomeItemAdmin> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return apiPutForm<HomeItemAdmin>(`${itemsUrl(sectionId)}/${itemId}/mobile`, formData, { onProgress })
+}
+
+export async function removeHomeItemMobile(sectionId: number, itemId: number): Promise<void> {
+  await apiDelete<unknown>(`${itemsUrl(sectionId)}/${itemId}/mobile`)
 }
 
 // ─── Productos de un estante ─────────────────────────────────

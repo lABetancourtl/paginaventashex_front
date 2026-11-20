@@ -12,17 +12,17 @@ interface AdminPaginationProps {
 }
 
 const navButtonClass = [
-  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-admin-line bg-white px-3 text-sm font-medium',
+  'inline-flex h-[34px] items-center gap-1.5 rounded-lg border border-[#dcdbd6] bg-white px-3 text-[13px] font-medium text-admin-ink',
   'transition-colors hover:bg-admin-bg',
 ].join(' ')
 
 const disabledNavClass =
-  'inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-lg border border-admin-line bg-white px-3 text-sm font-medium opacity-40'
+  'inline-flex h-[34px] cursor-not-allowed items-center gap-1.5 rounded-lg border border-[#dcdbd6] bg-white px-3 text-[13px] font-medium opacity-40'
 
 const pageClass = [
-  'flex size-9 items-center justify-center rounded-lg text-sm font-medium tabular-nums text-ink-muted transition-colors',
-  'hover:bg-admin-bg hover:text-ink',
-  'aria-[current=page]:bg-admin-accent/10 aria-[current=page]:text-admin-accent',
+  'flex size-[34px] items-center justify-center rounded-lg text-[13px] font-medium tabular-nums text-[#6b6a65] transition-colors',
+  'hover:bg-admin-hover hover:text-admin-ink',
+  'aria-[current=page]:bg-admin-ink aria-[current=page]:text-white',
 ].join(' ')
 
 // El backend no envía el tamaño de página: se deduce de los totales
@@ -48,13 +48,13 @@ function AdminPagination({
   const isLast = currentPage >= totalPages
 
   return (
-    <div className="flex flex-col gap-3 border-t border-admin-line px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-      <p className="text-sm text-ink-muted">
+    <div className="flex flex-col gap-3 border-t border-admin-row-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <p className="text-[13px] text-[#8b8a84]">
         Mostrando{' '}
-        <span className="font-medium tabular-nums text-ink">
+        <span className="font-medium tabular-nums text-admin-ink">
           {from}–{to}
         </span>{' '}
-        de <span className="font-medium tabular-nums text-ink">{totalItems}</span>{' '}
+        de <span className="font-medium tabular-nums text-admin-ink">{totalItems}</span>{' '}
         {totalItems === 1 ? noun[0] : noun[1]}
       </p>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useBlocker, useNavigate, useParams } from 'react-router'
 import { useQueries } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, ExternalLink, LayoutTemplate, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, CloudOff, ExternalLink, LayoutTemplate, Monitor, Pencil, Plus, Smartphone, Trash2 } from 'lucide-react'
 import { SITE_NAME } from '../../config/site'
 import { useAdminCategoryTree } from '../../features/catalog/hooks/useAdminCategoryTree'
 import {
@@ -20,6 +20,7 @@ import AdminConfirmDialog from '../components/AdminConfirmDialog'
 import HomeActivateEmptyDialog from '../components/HomeActivateEmptyDialog'
 import HomeBannerEditor from '../components/HomeBannerEditor'
 import HomeBlockList from '../components/HomeBlockList'
+import DevicePreviewFrame from '../components/DevicePreviewFrame'
 import HomeLivePreview from '../components/HomeLivePreview'
 import type { PreviewContent } from '../components/HomeLivePreview'
 import HomeSectionFormDialog from '../components/HomeSectionFormDialog'
@@ -38,9 +39,11 @@ import {
 } from '../homeSections'
 import type { ShelfProduct } from '../homeSections'
 import {
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
-  adminSmallButtonClass,
+  adminCountChipClass,
+  adminGhostButtonClass,
+  adminOutlineButtonClass,
+  adminPanelClass,
+  adminSolidButtonClass,
 } from '../adminStyles'
 
 const byOrder = <T extends { displayOrder: number }>(list: T[]) =>
@@ -57,7 +60,23 @@ const isTypingTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"], [role="listbox"]') !== null
 
-const panelLabelClass = 'text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted'
+type PreviewDevice = 'desktop' | 'mobile'
+const PREVIEW_DEVICE_KEY = 'admin:inicio-vista-previa'
+const MOBILE_PREVIEW_WIDTH = 390 // Ancho típico de un celular
+
+// Recuerda la última vista elegida (computador o celular)
+function readPreviewDevice(): PreviewDevice {
+  try {
+    return localStorage.getItem(PREVIEW_DEVICE_KEY) === 'mobile' ? 'mobile' : 'desktop'
+  } catch {
+    return 'desktop'
+  }
+}
+
+const panelLabelClass = 'text-[13px] font-semibold text-admin-ink'
+
+// Columnas laterales: en pantallas grandes quedan fijas al hacer scroll, con su propio scroll interno
+const stickyColumnClass = 'xl:sticky xl:top-[84px] xl:max-h-[calc(100dvh-104px)]'
 
 // ─── La página ──────────────────────────────────────────────
 function AdminHomeEditorPage() {
@@ -77,6 +96,16 @@ function AdminHomeEditorPage() {
   const [dialog, setDialog] = useState<HomeSectionDialogState | null>(null)
   const [toDelete, setToDelete] = useState<HomeSectionAdmin | null>(null)
   const [toActivateEmpty, setToActivateEmpty] = useState<HomeSectionAdmin | null>(null)
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>(readPreviewDevice)
+
+  const changePreviewDevice = (device: PreviewDevice) => {
+    setPreviewDevice(device)
+    try {
+      localStorage.setItem(PREVIEW_DEVICE_KEY, device)
+    } catch {
+      // Sin almacenamiento: solo dura esta visita
+    }
+  }
 
   // ─── Bloque seleccionado: el de la URL, o el primero ──────
   const requestedId = Number(id)
@@ -307,50 +336,50 @@ function AdminHomeEditorPage() {
     const viewAllInactive = selected.categoryId !== null && !isCategoryUsable(tree, selected.categoryId)
 
     const status = !selected.isActive
-      ? { dot: 'bg-ink/25', text: 'Oculto: no se ve en la tienda' }
+      ? { dot: 'bg-[#b5b4ae]', ink: 'text-[#6b6a65]', text: 'Oculto: no se ve en la tienda' }
       : count === 0
-        ? { dot: 'bg-amber-500', text: 'Activo, pero vacío: la tienda no lo muestra' }
-        : { dot: 'bg-admin-success', text: 'Publicado: se ve en la página de inicio' }
+        ? { dot: 'bg-[#e3a008]', ink: 'text-[#8a5a00]', text: 'Activo, pero vacío: la tienda no lo muestra' }
+        : { dot: 'bg-[#2f9e5b]', ink: 'text-[#1f7a45]', text: 'Publicado: se ve en la página de inicio' }
 
     panel = (
       <>
-        <div className="space-y-1 border-b border-admin-line px-5 py-4">
-          <p className="text-xs text-ink-muted">
+        <div className="space-y-1 border-b border-admin-row-line px-5 py-4">
+          <p className="text-xs text-[#8b8a84]">
             {sectionTypeLabel(selected)} · posición {selectedIndex + 1} de {sections.length}
           </p>
-          <h2 className={`break-words text-lg font-semibold ${!isBanner && !selected.title ? 'italic text-ink-muted' : ''}`}>
+          <h2 className={`break-words text-[17px] font-semibold tracking-tight ${!isBanner && !selected.title ? 'italic text-[#8b8a84]' : ''}`}>
             {name}
           </h2>
-          <p className="flex items-center gap-1.5 text-xs text-ink-muted">
-            <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${status.dot}`} />
+          <p className={`flex items-center gap-1.5 text-[13px] font-medium ${status.ink}`}>
+            <span aria-hidden="true" className={`size-[7px] shrink-0 rounded-full ${status.dot}`} />
             {setStatus.isPending && setStatus.variables?.id === selected.id ? 'Guardando…' : status.text}
           </p>
         </div>
 
-        <div className="flex-1 space-y-6 overflow-auto px-5 py-4">
+        <div className="min-h-0 flex-1 space-y-6 overflow-auto px-5 py-4">
           {!isBanner && (
             <section className="space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <h3 className={panelLabelClass}>Encabezado</h3>
-                <button type="button" onClick={() => openEdit(selected)} className={`${adminSmallButtonClass} h-7`}>
+                <button type="button" onClick={() => openEdit(selected)} className={adminOutlineButtonClass}>
                   <Pencil size={13} strokeWidth={1.75} aria-hidden="true" />
                   Editar
                 </button>
               </div>
               <dl className="grid grid-cols-2 gap-3 text-xs">
                 <div className="min-w-0">
-                  <dt className="text-ink-muted">Título</dt>
-                  <dd className={`mt-0.5 break-words text-[13px] font-medium ${selected.title ? '' : 'italic text-ink-muted'}`}>
+                  <dt className="text-[#8b8a84]">Título</dt>
+                  <dd className={`mt-0.5 break-words text-[13px] font-medium ${selected.title ? '' : 'italic text-[#8b8a84]'}`}>
                     {selected.title ?? 'Sin título'}
                   </dd>
                 </div>
                 <div className="min-w-0">
-                  <dt className="text-ink-muted">“Ver todo” lleva a</dt>
-                  <dd className={`mt-0.5 text-[13px] font-medium ${selected.categoryName ? '' : 'italic text-ink-muted'}`}>
+                  <dt className="text-[#8b8a84]">“Ver todo” lleva a</dt>
+                  <dd className={`mt-0.5 text-[13px] font-medium ${selected.categoryName ? '' : 'italic text-[#8b8a84]'}`}>
                     {selected.categoryName ?? 'Sin botón'}
                   </dd>
                   {viewAllInactive && (
-                    <dd className="mt-0.5 text-[11px] text-amber-700">Categoría inactiva: el botón no se mostrará.</dd>
+                    <dd className="mt-0.5 text-[11px] font-medium text-[#8a5a00]">Categoría inactiva: el botón no se mostrará.</dd>
                   )}
                 </div>
               </dl>
@@ -358,13 +387,16 @@ function AdminHomeEditorPage() {
           )}
 
           <section className="space-y-2.5">
-            <h3 className={panelLabelClass}>
-              {isBanner ? 'Medios' : 'Productos'} · {count} de {max}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className={panelLabelClass}>{isBanner ? 'Medios' : 'Productos'}</h3>
+              <span className={adminCountChipClass}>
+                {count} de {max}
+              </span>
+            </div>
             {!contentQuery || contentQuery.isPending ? (
               <div className="animate-pulse space-y-2">
-                <div className="h-16 rounded-lg bg-admin-bg" />
-                <div className="h-16 rounded-lg bg-admin-bg" />
+                <div className="h-16 rounded-[10px] bg-admin-active" />
+                <div className="h-16 rounded-[10px] bg-[#f3f2ee]" />
               </div>
             ) : contentQuery.error ? (
               <p role="alert" className="text-sm text-danger">
@@ -383,12 +415,12 @@ function AdminHomeEditorPage() {
           </section>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-admin-line px-5 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-admin-row-line px-5 py-3">
           <button
             type="button"
             onClick={() => move(-1)}
             disabled={selectedIndex === 0 || reorder.isPending}
-            className={adminSmallButtonClass}
+            className={adminOutlineButtonClass}
           >
             <ArrowUp size={14} strokeWidth={1.75} aria-hidden="true" />
             Subir
@@ -397,7 +429,7 @@ function AdminHomeEditorPage() {
             type="button"
             onClick={() => move(1)}
             disabled={selectedIndex === sections.length - 1 || reorder.isPending}
-            className={adminSmallButtonClass}
+            className={adminOutlineButtonClass}
           >
             <ArrowDown size={14} strokeWidth={1.75} aria-hidden="true" />
             Bajar
@@ -408,7 +440,7 @@ function AdminHomeEditorPage() {
               deleteSection.reset()
               setToDelete(selected)
             }}
-            className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-danger transition-colors hover:bg-red-50"
+            className={`${adminGhostButtonClass} ml-auto text-[#b42318]! hover:bg-[#fdecea]!`}
           >
             <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
             Eliminar
@@ -422,45 +454,47 @@ function AdminHomeEditorPage() {
   let body
   if (isPending) {
     body = (
-      <div aria-label="Cargando bloques" className="grid flex-1 animate-pulse gap-4 p-4 xl:grid-cols-[300px_1fr_360px] xl:p-0">
-        <div className="h-64 rounded-xl bg-white xl:h-full xl:rounded-none" />
-        <div className="hidden p-6 xl:block">
-          <div className="h-full rounded-xl bg-white" />
-        </div>
-        <div className="h-64 rounded-xl bg-white xl:h-full xl:rounded-none" />
+      <div aria-label="Cargando bloques" className="grid animate-pulse gap-5 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)_minmax(320px,380px)]">
+        <div className={`${adminPanelClass} h-80`} />
+        <div className={`${adminPanelClass} hidden h-[520px] xl:block`} />
+        <div className={`${adminPanelClass} h-80`} />
       </div>
     )
   } else if (error) {
     body = (
-      <p role="alert" className="px-5 py-10 text-center text-sm text-danger">
-        {error.message}
-      </p>
+      <section role="alert" className={`${adminPanelClass} flex flex-col items-center gap-2 px-6 py-14 text-center`}>
+        <span className="flex size-11 items-center justify-center rounded-full bg-[#fdecea] text-[#b42318]">
+          <CloudOff size={20} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <p className="mt-1 text-[15px] font-semibold">No pudimos cargar la página de inicio</p>
+        <p className="max-w-[340px] text-sm text-[#6b6a65]">{error.message}</p>
+      </section>
     )
   } else if (sections.length === 0) {
     body = (
-      <div className="flex flex-1 flex-col items-center justify-center px-5 py-16 text-center">
-        <span className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-white text-ink-muted ring-1 ring-admin-line">
-          <LayoutTemplate size={22} strokeWidth={1.5} aria-hidden="true" />
+      <section className={`${adminPanelClass} flex flex-col items-center gap-2 px-6 pb-[68px] pt-16 text-center`}>
+        <span className="flex size-[52px] items-center justify-center rounded-[14px] bg-admin-hover text-[#4a4945]">
+          <LayoutTemplate size={24} strokeWidth={1.5} aria-hidden="true" />
         </span>
-        <p className="text-sm font-medium">La página de inicio está vacía</p>
-        <p className="mt-1 max-w-sm text-sm text-ink-muted">
+        <p className="mt-1.5 text-base font-semibold">La página de inicio está vacía</p>
+        <p className="max-w-[380px] text-sm text-[#6b6a65]">
           Agrega banners y estantes de productos, en el orden que quieras. La tienda muestra un mensaje genérico
           mientras tanto.
         </p>
-        <button type="button" onClick={openCreate} className={`${adminPrimaryButtonClass} mt-5`}>
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
+        <button type="button" onClick={openCreate} className={`${adminSolidButtonClass} mt-2.5`}>
+          <Plus size={14} strokeWidth={2} aria-hidden="true" />
           Agregar bloque
         </button>
-      </div>
+      </section>
     )
   } else {
     body = (
       // Celular y tablet: una columna (lista, editor, vista previa).
       // Pantallas grandes: tres columnas, cada una con su propio scroll
-      <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)_minmax(320px,380px)]">
+      <div className="grid grid-cols-1 gap-3.5 md:gap-5 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)_minmax(320px,380px)] xl:items-start">
         <aside
           aria-label="Bloques de la página"
-          className="flex max-h-[60vh] min-h-0 flex-col border-b border-admin-line bg-white xl:max-h-none xl:border-b-0 xl:border-r"
+          className={`${adminPanelClass} flex max-h-[60vh] min-h-0 flex-col overflow-hidden ${stickyColumnClass}`}
         >
           <HomeBlockList
             sections={sections}
@@ -476,20 +510,73 @@ function AdminHomeEditorPage() {
 
         <section
           aria-label="Vista previa"
-          className="order-3 min-h-0 min-w-0 overflow-auto p-4 md:p-6 xl:order-none"
+          className={`${adminPanelClass} order-3 min-w-0 overflow-hidden xl:order-none`}
         >
-          <HomeLivePreview
-            sections={sections}
-            selectedId={selected?.id}
-            content={preview}
-            tree={tree ?? []}
-            onSelect={select}
-          />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 border-b border-admin-row-line px-5 py-3 text-[13px]">
+            <h2 className="font-semibold text-admin-ink">Vista previa</h2>
+            <span className="text-[#8b8a84]">· toca un bloque para editarlo</span>
+            {/* Computador o celular: la de celular se dibuja en un iframe del ancho de un teléfono */}
+            <div
+              role="radiogroup"
+              aria-label="Ver como"
+              className="ml-auto inline-flex gap-0.5 rounded-[10px] bg-admin-active p-[3px]"
+            >
+              {(
+                [
+                  { value: 'desktop', label: 'Computador', icon: Monitor },
+                  { value: 'mobile', label: 'Celular', icon: Smartphone },
+                ] as const
+              ).map(({ value, label, icon: Icon }) => {
+                const isActive = previewDevice === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    onClick={() => changePreviewDevice(value)}
+                    className={`inline-flex h-[30px] items-center gap-1.5 rounded-[7px] px-2.5 text-[13px] font-medium transition-colors ${
+                      isActive ? 'bg-white text-admin-ink shadow-[0_1px_2px_rgb(0_0_0/0.08)]' : 'text-[#6b6a65] hover:text-admin-ink'
+                    }`}
+                  >
+                    <Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          {previewDevice === 'desktop' ? (
+            <div className="overflow-auto">
+              <HomeLivePreview
+                sections={sections}
+                selectedId={selected?.id}
+                content={preview}
+                tree={tree ?? []}
+                onSelect={select}
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center bg-admin-bg px-4 py-6">
+              {/* Marco de teléfono */}
+              <div className="max-w-full rounded-[28px] border border-admin-line bg-white p-2.5 shadow-[0_8px_24px_rgb(28_28_26/0.08)]">
+                <DevicePreviewFrame width={MOBILE_PREVIEW_WIDTH} title="Vista previa en celular">
+                  <HomeLivePreview
+                    sections={sections}
+                    selectedId={selected?.id}
+                    content={preview}
+                    tree={tree ?? []}
+                    onSelect={select}
+                  />
+                </DevicePreviewFrame>
+              </div>
+            </div>
+          )}
         </section>
 
         <section
           aria-label="Editar bloque"
-          className="order-2 flex min-h-0 flex-col border-b border-admin-line bg-white xl:order-none xl:border-b-0 xl:border-l"
+          className={`${adminPanelClass} order-2 flex min-h-0 flex-col overflow-hidden xl:order-none ${stickyColumnClass}`}
         >
           {panel}
         </section>
@@ -501,33 +588,30 @@ function AdminHomeEditorPage() {
     <>
       <title>{`Página de inicio | Admin ${SITE_NAME}`}</title>
 
-      {/* Alto de la pantalla menos la barra superior del panel (h-16) */}
-      <div className="flex flex-col xl:h-[calc(100dvh-4rem)]">
-        <header className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-admin-line bg-white px-4 py-3 md:px-5 xl:h-14 xl:flex-nowrap xl:py-0">
-          <div className="flex min-w-0 flex-1 basis-full flex-col gap-x-2.5 sm:basis-auto xl:flex-row xl:items-baseline">
-            <h1 className="whitespace-nowrap text-base font-semibold text-ink">Página de inicio</h1>
-            <p className="truncate text-[13px] text-ink-muted">{summary}</p>
+      <div className="flex flex-col">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight text-admin-ink">Página de inicio</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6b6a65]">
+              <span>{summary}</span>
+              <span role="status" className={`inline-flex items-center gap-1.5 font-medium ${isDirty ? 'text-[#8a5a00]' : 'text-[#1f7a45]'}`}>
+                <span aria-hidden="true" className={`size-[7px] rounded-full ${isDirty ? 'bg-[#e3a008]' : 'bg-[#2f9e5b]'}`} />
+                {isDirty ? 'Cambios sin guardar en el estante' : 'Todo guardado'}
+              </span>
+            </div>
           </div>
 
-          <p className="flex items-center gap-2 whitespace-nowrap text-[13px] text-ink-muted" role="status">
-            <span
-              aria-hidden="true"
-              className={`size-2 rounded-full ${isDirty ? 'bg-amber-500' : 'bg-admin-success'}`}
-            />
-            {isDirty ? 'Cambios sin guardar en el estante' : 'Todo guardado'}
-          </p>
-
           <div className="flex flex-wrap items-center gap-2">
-            <a href="/" target="_blank" rel="noreferrer" className={`${adminSecondaryButtonClass} h-[34px] py-0 text-[13px]`}>
+            <a href="/" target="_blank" rel="noreferrer" className={`${adminOutlineButtonClass} rounded-[9px] text-sm`}>
+              <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
               Ver en la tienda
-              <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
             </a>
             {/* Siempre en su lugar para no mover la barra: se activan con cambios en un estante */}
             <button
               type="button"
               onClick={() => setDraft(null)}
               disabled={!isDirty || saveProducts.isPending}
-              className={`${adminSecondaryButtonClass} h-[34px] py-0 text-[13px]`}
+              className={`${adminGhostButtonClass} text-sm`}
             >
               Descartar
             </button>
@@ -535,12 +619,12 @@ function AdminHomeEditorPage() {
               type="button"
               onClick={handleSaveProducts}
               disabled={!isDirty || saveProducts.isPending}
-              className={`${adminPrimaryButtonClass} h-[34px] py-0 text-[13px]`}
+              className={adminSolidButtonClass}
             >
               {saveProducts.isPending ? 'Guardando…' : 'Guardar cambios'}
             </button>
           </div>
-        </header>
+        </div>
 
         {body}
       </div>

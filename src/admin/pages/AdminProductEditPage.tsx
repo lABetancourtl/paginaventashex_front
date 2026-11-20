@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Link, useBlocker, useLocation, useParams } from 'react-router'
-import { Check, Circle, ExternalLink, ImageOff, PackageX, PartyPopper, X } from 'lucide-react'
+import { ArrowLeft, Check, CloudOff, Eye, PackageX, PartyPopper, RotateCw, X } from 'lucide-react'
 import { ApiRequestError } from '../../api/client'
 import { SITE_NAME } from '../../config/site'
-import { cloudinaryUrl } from '../../utils/cloudinary'
-import { formatCOP } from '../../utils/formatters'
 import { useAdminCategoryTree } from '../../features/catalog/hooks/useAdminCategoryTree'
 import { useAdminProduct } from '../../features/catalog/hooks/useAdminProduct'
 import {
@@ -13,87 +12,196 @@ import {
   useSetProductStatus,
   useUpdateProduct,
 } from '../../features/catalog/hooks/useProductMutations'
-import AdminPageHeader from '../components/AdminPageHeader'
-import AdminCard from '../components/AdminCard'
 import AdminConfirmDialog from '../components/AdminConfirmDialog'
-import ProductForm from '../components/ProductForm'
-import ProductDiscountForm from '../components/ProductDiscountForm'
-import StatusBadge from '../components/StatusBadge'
-import { toProductFormValues, toUpdateProductRequest } from '../productForm'
-import type { ProductFormValues } from '../productForm'
-import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
 import AdminSwitch from '../components/AdminSwitch'
-import { useAdminToast } from '../toast/toastContext'
+import ProductEditForm from '../components/ProductEditForm'
+import ProductInsightsCard from '../components/ProductInsightsCard'
 import ProductMediaManager from '../components/ProductMediaManager'
 import ProductVariantsManager from '../components/ProductVariantsManager'
-
-const breadcrumbsBase = [{ label: 'Productos', to: '/admin/productos' }]
+import { toProductEditValues, toUpdateProductRequest } from '../productForm'
+import type { ProductEditValues } from '../productForm'
+import {
+  adminGhostButtonClass,
+  adminOutlineButtonClass,
+  adminPanelClass,
+  adminSolidButtonClass,
+} from '../adminStyles'
+import { useAdminToast } from '../toast/toastContext'
 
 const FORM_ID = 'product-edit-form'
 
-// Secciones de la página, para el índice y los enlaces del resumen
-const sections = [
-  { id: 'informacion', label: 'Información' },
-  { id: 'variantes', label: 'Variantes' },
-  { id: 'imagenes', label: 'Imágenes y video' },
-] as const
-
 const scrollToSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 
-interface ReadinessItem {
-  label: string
-  done: boolean
-  section: string
+// Contenedor de la página: mismo ancho que la lista de productos
+function PageFrame({ children }: { children: ReactNode }) {
+  return <div className="flex w-full flex-col gap-3.5 md:gap-5">{children}</div>
 }
 
-// Lo que necesita el producto para venderse bien
-function ReadinessChecklist({ items }: { items: ReadinessItem[] }) {
-  const doneCount = items.filter((item) => item.done).length
+function BackLink() {
   return (
-    <div className="mt-4 rounded-xl border border-admin-line p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-ink">Listo para vender</p>
-        <span className="text-[11px] font-medium tabular-nums text-ink-muted">
-          {doneCount} de {items.length}
+    <Link
+      to="/admin/productos"
+      className="mb-1.5 hidden items-center gap-1.5 text-[13px] text-[#6b6a65] hover:text-admin-ink md:inline-flex"
+    >
+      <ArrowLeft size={14} strokeWidth={1.75} aria-hidden="true" />
+      Productos
+    </Link>
+  )
+}
+
+// Estado centrado (no encontrado, error)
+function CenteredState({
+  icon,
+  tone,
+  title,
+  text,
+  children,
+}: {
+  icon: ReactNode
+  tone: 'neutral' | 'danger'
+  title: string
+  text: string
+  children: ReactNode
+}) {
+  return (
+    <section className={`${adminPanelClass} flex flex-col items-center gap-2 px-6 py-16 text-center`}>
+      <span
+        className={`flex size-11 items-center justify-center rounded-full ${
+          tone === 'danger' ? 'bg-[#fdecea] text-[#b42318]' : 'bg-admin-hover text-[#4a4945]'
+        }`}
+      >
+        {icon}
+      </span>
+      <p className="mt-1 text-[15px] font-semibold">{title}</p>
+      <p className="max-w-[340px] text-sm text-[#6b6a65]">{text}</p>
+      <div className="mt-2 flex gap-2">{children}</div>
+    </section>
+  )
+}
+
+function DetailSkeleton() {
+  return (
+    <div aria-label="Cargando producto" className="flex animate-pulse flex-col gap-5 lg:flex-row lg:items-start">
+      <div className="flex min-w-0 flex-[1.8] flex-col gap-5">
+        {[0, 1, 2].map((key) => (
+          <div key={key} className={`${adminPanelClass} flex flex-col gap-3.5 p-5`}>
+            <div className="h-3.5 w-[30%] rounded-md bg-admin-active" />
+            <div className="h-10 rounded-[9px] bg-[#f3f2ee]" />
+            <div className="h-[84px] rounded-[9px] bg-[#f3f2ee]" />
+          </div>
+        ))}
+      </div>
+      <div className={`${adminPanelClass} flex flex-1 flex-col gap-3 p-5`}>
+        <div className="h-3.5 w-[40%] rounded-md bg-admin-active" />
+        <div className="h-3 w-[80%] rounded-md bg-[#f3f2ee]" />
+        <div className="h-3 w-[70%] rounded-md bg-[#f3f2ee]" />
+        <div className="h-3 w-[75%] rounded-md bg-[#f3f2ee]" />
+      </div>
+    </div>
+  )
+}
+
+interface ReadinessCheck {
+  label: string
+  done: boolean
+  fix: { label: string; section?: string; to?: string }
+}
+
+// Interruptor de visibilidad + lo que le falta al producto para venderse
+function VisibilityCard({
+  isActive,
+  isSaving,
+  checks,
+  onToggle,
+}: {
+  isActive: boolean
+  isSaving: boolean
+  checks: ReadinessCheck[]
+  onToggle: () => void
+}) {
+  const doneCount = checks.filter((check) => check.done).length
+  const allDone = doneCount === checks.length
+
+  return (
+    <section className={adminPanelClass}>
+      <div className="flex items-center gap-3 py-4 pl-5 pr-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[15px] font-semibold">Visible en la tienda</h2>
+          <p className="text-[13px] text-[#6b6a65]">
+            {isSaving ? 'Guardando…' : isActive ? 'Los clientes pueden verlo.' : 'Solo tú puedes verlo.'}
+          </p>
+        </div>
+        <span className="flex h-10 w-12 items-center justify-center">
+          <AdminSwitch
+            tone="ink"
+            checked={isActive}
+            disabled={isSaving}
+            label={isActive ? 'Ocultar de la tienda' : 'Mostrar en la tienda'}
+            onChange={onToggle}
+          />
         </span>
       </div>
-      <div
-        className="mb-3 h-1.5 overflow-hidden rounded-full bg-admin-bg"
-        role="progressbar"
-        aria-label="Progreso para vender"
-        aria-valuenow={doneCount}
-        aria-valuemin={0}
-        aria-valuemax={items.length}
-      >
+
+      <div className="flex flex-col gap-2.5 border-t border-admin-row-line px-5 pb-4 pt-3.5">
+        <div className="flex items-center gap-2">
+          <span className={`font-medium ${allDone ? 'text-[#1f7a45]' : 'text-[#8a5a00]'}`}>
+            {allDone ? 'Listo para vender' : 'Falta para vender'}
+          </span>
+          <span className="ml-auto text-xs tabular-nums text-[#8b8a84]">
+            {doneCount} de {checks.length}
+          </span>
+        </div>
         <div
-          className={`h-full rounded-full transition-[width] ${doneCount === items.length ? 'bg-admin-success' : 'bg-amber-400'}`}
-          style={{ width: `${(doneCount / items.length) * 100}%` }}
-        />
-      </div>
-      <ul className="space-y-1.5">
-        {items.map(({ label, done, section }) => (
-          <li key={label}>
-            <button
-              type="button"
-              onClick={() => scrollToSection(section)}
-              className="flex w-full items-center gap-2 rounded-md text-left text-xs hover:text-admin-accent"
-            >
-              {done ? (
-                <span className="flex size-4 items-center justify-center rounded-full bg-admin-success text-white">
-                  <Check size={11} strokeWidth={3} aria-hidden="true" />
-                </span>
-              ) : (
-                <Circle size={16} strokeWidth={1.75} aria-hidden="true" className="text-amber-500" />
-              )}
-              <span className={done ? 'text-ink-muted line-through decoration-ink-muted/40' : 'font-medium text-ink'}>
-                {label}
+          role="progressbar"
+          aria-label="Progreso para vender"
+          aria-valuenow={doneCount}
+          aria-valuemin={0}
+          aria-valuemax={checks.length}
+          className="h-1 overflow-hidden rounded-sm bg-admin-active"
+        >
+          <div
+            className={`h-full transition-[width] duration-200 ${allDone ? 'bg-[#2f9e5b]' : 'bg-[#e3a008]'}`}
+            style={{ width: `${(doneCount / checks.length) * 100}%` }}
+          />
+        </div>
+
+        <ul className="flex flex-col">
+          {checks.map(({ label, done, fix }) => (
+            <li key={label} className="flex min-h-7 items-center gap-2.5 py-0.5">
+              <span
+                aria-hidden="true"
+                className={`flex size-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+                  done ? 'border-[#2f9e5b] bg-[#2f9e5b] text-white' : 'border-[#cfcec8] bg-white'
+                }`}
+              >
+                {done && <Check size={11} strokeWidth={3} />}
               </span>
-              <span className="sr-only">{done ? '(listo)' : '(pendiente)'}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+              <span className={`flex-1 text-[13px] ${done ? 'text-[#6b6a65]' : 'text-admin-ink'}`}>
+                {label}
+                <span className="sr-only">{done ? ' (listo)' : ' (pendiente)'}</span>
+              </span>
+              {!done &&
+                (fix.to ? (
+                  <Link
+                    to={fix.to}
+                    className="inline-flex h-7 items-center rounded-[7px] border border-[#dcdbd6] bg-white px-2.5 text-xs font-medium hover:bg-admin-bg"
+                  >
+                    {fix.label}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fix.section && scrollToSection(fix.section)}
+                    className="inline-flex h-7 items-center rounded-[7px] border border-[#dcdbd6] bg-white px-2.5 text-xs font-medium hover:bg-admin-bg"
+                  >
+                    {fix.label}
+                  </button>
+                ))}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   )
 }
 
@@ -119,9 +227,11 @@ function AdminProductEditPage() {
   // ─── Cambios sin guardar ──────────────────────────────────
   const [isDirty, setIsDirty] = useState(false)
   const [formKey, setFormKey] = useState(0) // Al cambiarla, el formulario vuelve a los datos guardados
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const handleDirtyChange = useCallback((dirty: boolean) => setIsDirty(dirty), [])
 
-  // Si sale del panel con cambios, se le pregunta antes
+  // Si sale del producto con cambios, se le pregunta antes
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) => isDirty && currentLocation.pathname !== nextLocation.pathname,
   )
@@ -136,61 +246,104 @@ function AdminProductEditPage() {
 
   if (!isValidId || (product.error instanceof ApiRequestError && product.error.status === 404)) {
     return (
-      <>
-        <AdminPageHeader title="Producto no encontrado" breadcrumbs={breadcrumbsBase} />
-        <AdminCard>
-          <div className="flex flex-col items-center py-8 text-center">
-            <span className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-admin-bg text-ink-muted">
-              <PackageX size={22} strokeWidth={1.5} aria-hidden="true" />
-            </span>
-            <p className="text-sm text-ink-muted">Puede que el enlace esté mal o que el producto ya no exista.</p>
-            <Link to="/admin/productos" className={`${adminSecondaryButtonClass} mt-5`}>
-              Volver a productos
-            </Link>
-          </div>
-        </AdminCard>
-      </>
+      <PageFrame>
+        <div>
+          <BackLink />
+          <h1 className="text-2xl font-semibold tracking-tight">Producto no encontrado</h1>
+        </div>
+        <CenteredState
+          tone="neutral"
+          icon={<PackageX size={20} strokeWidth={1.75} aria-hidden="true" />}
+          title="Este producto no existe"
+          text="Puede que el enlace esté mal o que el producto ya no exista."
+        >
+          <Link to="/admin/productos" className={adminOutlineButtonClass}>
+            Volver a Productos
+          </Link>
+        </CenteredState>
+      </PageFrame>
     )
   }
 
   if (product.isPending) {
     return (
-      <div aria-label="Cargando producto" className="animate-pulse space-y-4">
-        <div className="h-8 w-64 rounded-lg bg-white" />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="h-96 rounded-2xl bg-white lg:col-span-2" />
-          <div className="h-64 rounded-2xl bg-white" />
-        </div>
-      </div>
+      <PageFrame>
+        <div className="h-[60px] w-72 animate-pulse rounded-lg bg-admin-active" />
+        <DetailSkeleton />
+      </PageFrame>
     )
   }
-  if (product.error) return <p className="text-sm text-danger">{product.error.message}</p>
+
+  if (product.error) {
+    return (
+      <PageFrame>
+        <CenteredState
+          tone="danger"
+          icon={<CloudOff size={20} strokeWidth={1.75} aria-hidden="true" />}
+          title="No pudimos cargar este producto"
+          text="Revisa tu conexión y vuelve a intentarlo. Tus cambios guardados siguen a salvo."
+        >
+          <button type="button" onClick={() => product.refetch()} className={adminOutlineButtonClass}>
+            <RotateCw size={14} strokeWidth={1.75} aria-hidden="true" />
+            Reintentar
+          </button>
+          <Link to="/admin/productos" className={adminGhostButtonClass}>
+            Volver a Productos
+          </Link>
+        </CenteredState>
+      </PageFrame>
+    )
+  }
 
   const item = product.data
   const imageCount = item.media.filter((media) => media.mediaType === 'Image').length
   const activeVariants = item.variants.filter((variant) => variant.isActive)
   const totalStock = activeVariants.reduce((sum, variant) => sum + variant.stock, 0)
-  const hasDiscount = item.discountPercent !== null && item.discountPercent > 0
 
   const categoryIsActive =
     categories.data?.some(
       (root) => root.isActive && root.children.some((child) => child.id === item.categoryId && child.isActive),
     ) ?? true
-  const readiness: ReadinessItem[] = [
-    { label: 'Al menos una imagen', done: imageCount > 0, section: 'imagenes' },
-    { label: 'Una variante activa', done: activeVariants.length > 0, section: 'variantes' },
-    { label: 'Unidades disponibles', done: totalStock > 0, section: 'variantes' },
-    { label: 'Categoría activa', done: categoryIsActive, section: 'informacion' },
+  const checks: ReadinessCheck[] = [
+    { label: 'Al menos una imagen', done: imageCount > 0, fix: { label: 'Subir', section: 'imagenes' } },
+    { label: 'Una variante activa', done: activeVariants.length > 0, fix: { label: 'Agregar', section: 'variantes' } },
+    { label: 'Stock disponible', done: totalStock > 0, fix: { label: 'Reponer', section: 'variantes' } },
+    { label: 'Categoría activa', done: categoryIsActive, fix: { label: 'Revisar', to: '/admin/categorias' } },
   ]
-  const missing = readiness.filter((check) => !check.done)
+  const missing = checks.filter((check) => !check.done)
 
-  const handleSubmit = (values: ProductFormValues) => {
-    updateProduct.mutate(
-      { id: item.id, request: toUpdateProductRequest(values) },
-      { onSuccess: () => toast({ message: 'Cambios guardados.' }) },
-    )
+  // Estado que se lee en la cabecera
+  const status = !item.isActive
+    ? { text: 'Oculto', dot: 'bg-[#b5b4ae]', ink: 'text-[#6b6a65]' }
+    : missing.length === 0
+      ? { text: 'Visible en la tienda', dot: 'bg-[#2f9e5b]', ink: 'text-[#1f7a45]' }
+      : { text: 'Visible, pero no se puede comprar', dot: 'bg-[#e3a008]', ink: 'text-[#8a5a00]' }
+
+  // ─── Guardar: información y descuento salen del mismo formulario ─────
+  const handleSubmit = async ({ form, discount }: ProductEditValues) => {
+    const saved = toProductEditValues(item)
+    const infoChanged = (Object.keys(form) as (keyof typeof form)[]).some((key) => form[key] !== saved.form[key])
+    const discountChanged = discount !== saved.discount
+
+    setIsSaving(true)
+    setSaveError(null)
+    try {
+      if (infoChanged) await updateProduct.mutateAsync({ id: item.id, request: toUpdateProductRequest(form) })
+      if (discountChanged) {
+        if (discount > 0) await setDiscount.mutateAsync({ id: item.id, percent: discount })
+        else await removeDiscount.mutateAsync(item.id)
+      }
+      // Las mutaciones esperan a que el producto se recargue: el formulario arranca con los datos nuevos
+      setFormKey((key) => key + 1)
+      toast({ message: 'Cambios guardados.' })
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'No se pudieron guardar los cambios.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
+  // ─── Mostrar y ocultar ────────────────────────────────────
   const activate = () => {
     setStatus.mutate(
       { id: item.id, active: true },
@@ -199,7 +352,7 @@ function AdminProductEditPage() {
           missing.length > 0
             ? toast({
                 tone: 'info',
-                message: `Producto activo, pero le falta: ${missing.map((m) => m.label.toLowerCase()).join(', ')}.`,
+                message: `Ya es visible, pero le falta: ${missing.map((m) => m.label.toLowerCase()).join(', ')}.`,
               })
             : toast({ message: 'El producto ya se ve en la tienda.' }),
         onError: (error) => toast({ tone: 'error', message: error.message }),
@@ -228,247 +381,101 @@ function AdminProductEditPage() {
     )
   }
 
-  const applyDiscount = (percent: number) =>
-    setDiscount.mutate(
-      { id: item.id, percent },
-      { onSuccess: () => toast({ message: `Descuento del ${percent}% aplicado.` }) },
-    )
-
-  const clearDiscount = () =>
-    removeDiscount.mutate(item.id, { onSuccess: () => toast({ message: 'Descuento quitado.' }) })
-
   return (
-    <>
+    <PageFrame>
       <title>{`${item.name} | Admin ${SITE_NAME}`}</title>
 
-      <AdminPageHeader
-        breadcrumbs={[...breadcrumbsBase, { label: item.name }]}
-        title={
-          <span className="flex items-center gap-4">
-            <span className="hidden size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-admin-line bg-white sm:flex">
-              {item.catalogMainUrl ? (
-                <img
-                  src={cloudinaryUrl(item.catalogMainUrl, 112)}
-                  alt=""
-                  className="size-full object-contain mix-blend-multiply"
-                />
-              ) : (
-                <ImageOff size={18} strokeWidth={1.25} aria-hidden="true" className="text-ink-muted/50" />
-              )}
+      {/* Cabecera */}
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-[1_1_300px]">
+          <BackLink />
+          <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.025em] text-pretty md:text-2xl">
+            {item.name}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-[#6b6a65]">
+            <span className={`inline-flex items-center gap-1.5 font-medium ${status.ink}`}>
+              <span aria-hidden="true" className={`size-[7px] rounded-full ${status.dot}`} />
+              {status.text}
             </span>
-            <span className="min-w-0">{item.name}</span>
-          </span>
-        }
-        description={
-          <span className="flex flex-wrap items-center gap-2 sm:pl-[72px]">
-            <StatusBadge tone={item.isActive ? 'success' : 'neutral'}>
-              {item.isActive ? 'Activo' : 'Inactivo'}
-            </StatusBadge>
-            {hasDiscount && <StatusBadge tone="info">-{item.discountPercent}%</StatusBadge>}
             <span>{item.categoryName}</span>
-            <span aria-hidden="true">·</span>
-            <span>ID #{item.id}</span>
-          </span>
-        }
-        actions={
-          item.isActive ? (
+            <span className="font-mono text-xs">ID {item.id}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {item.isActive && (
             <a
               href={`/producto/${item.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={adminSecondaryButtonClass}
+              className={`${adminOutlineButtonClass} rounded-[9px] text-sm`}
             >
-              <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" />
-              Ver en la tienda
+              <Eye size={16} strokeWidth={1.75} aria-hidden="true" />
+              Ver en tienda
             </a>
-          ) : undefined
-        }
-      />
+          )}
+          <button
+            type="submit"
+            form={FORM_ID}
+            disabled={!isDirty || isSaving}
+            className={adminSolidButtonClass}
+          >
+            {isSaving ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        </div>
+      </div>
 
       {showCreatedNotice && (
-        <div
-          role="status"
-          className="mb-4 flex items-start gap-3 rounded-2xl border border-admin-accent/20 bg-admin-accent/5 px-4 py-3 text-sm"
-        >
+        <div role="status" className={`${adminPanelClass} flex items-start gap-3 px-4 py-3 text-sm`}>
           <PartyPopper size={18} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0 text-admin-accent" />
           <p className="flex-1">
-            <strong className="font-semibold">Producto creado.</strong> Está <strong>inactivo</strong>: agrega sus
-            imágenes y actívalo cuando esté listo para la venta.
+            <strong className="font-semibold">Producto creado.</strong> Está <strong>oculto</strong>: agrega sus
+            imágenes y muéstralo en la tienda cuando esté listo para la venta.
           </p>
           <button
             type="button"
             onClick={() => setShowCreatedNotice(false)}
             aria-label="Cerrar aviso"
-            className="shrink-0 rounded-md p-1 text-ink-muted hover:bg-admin-accent/10 hover:text-ink"
+            className="shrink-0 rounded-md p-1 text-[#8b8a84] hover:bg-admin-hover hover:text-admin-ink"
           >
             <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="flex flex-col gap-3.5 md:gap-5 lg:flex-row lg:items-start">
         {/* Columna principal */}
-        <div className="min-w-0 space-y-4">
-          <AdminCard id="informacion" title="Información">
-            <ProductForm
-              key={`${item.id}-${formKey}`}
-              formId={FORM_ID}
-              onDirtyChange={handleDirtyChange}
-              mode="edit"
-              initialValues={toProductFormValues(item)}
-              categories={categories.data ?? []}
-              categoryName={item.categoryName}
-              submitLabel="Guardar cambios"
-              isSaving={updateProduct.isPending}
-              serverError={updateProduct.error?.message ?? null}
-              onSubmit={handleSubmit}
-            />
-          </AdminCard>
+        <div className="flex min-w-0 flex-col gap-3.5 md:gap-5 lg:flex-[1.8_1_460px]">
+          <ProductEditForm
+            key={`${item.id}-${formKey}`}
+            formId={FORM_ID}
+            product={item}
+            isSaving={isSaving}
+            serverError={saveError}
+            onDirtyChange={handleDirtyChange}
+            onSubmit={handleSubmit}
+          />
 
-          <AdminCard
-            id="variantes"
-            title="Variantes"
-            description="Cada combinación de talla y color tiene su SKU y sus unidades."
-            flush
-            actions={
-              <span className="rounded-md bg-admin-bg px-2 py-1 text-xs font-medium tabular-nums text-ink-muted">
-                Stock total: {totalStock}
-              </span>
-            }
-          >
-            <ProductVariantsManager productId={item.id} variants={item.variants} />
-          </AdminCard>
+          <ProductVariantsManager productId={item.id} variants={item.variants} />
 
-          <AdminCard
-            id="imagenes"
-            title="Imágenes y video"
-            description="La primera imagen es la principal del catálogo; la segunda aparece al pasar el mouse."
-            actions={
-              <span className="rounded-md bg-admin-bg px-2 py-1 text-xs font-medium tabular-nums text-ink-muted">
-                {imageCount} de 9
-              </span>
-            }
-          >
-            <ProductMediaManager productId={item.id} media={item.media} />
-          </AdminCard>
+          <ProductMediaManager productId={item.id} media={item.media} />
         </div>
 
-        {/* Columna lateral */}
-        {/* El aside ocupa todo el alto de la fila y su contenido se queda fijo al hacer scroll.
-            El contenido mide al menos el alto visible (100vh - top-24 - padding inferior), y la
-            última tarjeta crece para llenarlo: así, al llegar al final, su borde inferior queda
-            alineado con la última tarjeta de la columna izquierda. */}
-        <aside className="min-w-0">
-          <div className="flex flex-col gap-4 lg:sticky lg:top-24 lg:min-h-[calc(100vh-8rem)]">
-          <nav aria-label="Secciones del producto" className="hidden rounded-2xl border border-admin-line bg-white p-1.5 lg:flex">
-            {sections.map(({ id: sectionId, label }) => (
-              <a
-                key={sectionId}
-                href={`#${sectionId}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  scrollToSection(sectionId)
-                }}
-                className="flex-1 rounded-lg px-2 py-1.5 text-center text-xs font-medium text-ink-muted transition-colors hover:bg-admin-bg hover:text-ink"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-          <AdminCard title="Estado">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">{item.isActive ? 'Visible en la tienda' : 'Oculto en la tienda'}</p>
-                <p className="text-xs text-ink-muted">
-                  {setStatus.isPending
-                    ? 'Guardando…'
-                    : item.isActive
-                      ? 'Los clientes pueden verlo y comprarlo.'
-                      : 'Actívalo cuando esté listo.'}
-                </p>
-              </div>
-              <AdminSwitch
-                checked={item.isActive}
-                disabled={setStatus.isPending}
-                label={item.isActive ? 'Desactivar producto' : 'Activar producto'}
-                onChange={handleToggleStatus}
-              />
-            </div>
-
-            <ReadinessChecklist items={readiness} />
-          </AdminCard>
-
-          <AdminCard title="Resumen">
-            <dl className="grid grid-cols-2 gap-2.5">
-              {[
-                { label: 'Precio final', value: formatCOP(item.finalPrice), section: 'informacion' },
-                { label: 'Unidades', value: totalStock, section: 'variantes' },
-                { label: 'Variantes activas', value: `${activeVariants.length} de ${item.variants.length}`, section: 'variantes' },
-                { label: 'Imágenes', value: `${imageCount} de 9`, section: 'imagenes' },
-              ].map(({ label, value, section }) => (
-                <div key={label} className="relative rounded-xl border border-admin-line px-3 py-2.5 transition-colors hover:border-admin-accent/40 hover:bg-admin-accent/[0.03]">
-                  <dt className="text-[11px] text-ink-muted">
-                    {/* Todo el cuadro lleva a su sección */}
-                    <button
-                      type="button"
-                      onClick={() => scrollToSection(section)}
-                      className="text-left after:absolute after:inset-0 after:content-['']"
-                    >
-                      {label}
-                    </button>
-                  </dt>
-                  <dd className="mt-0.5 truncate text-sm font-semibold tabular-nums">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </AdminCard>
-
-          <AdminCard title="Descuento" className="lg:flex-1">
-            <ProductDiscountForm
-              key={item.discountPercent ?? 'sin-descuento'}
-              price={item.price}
-              currentPercent={item.discountPercent}
-              isSaving={setDiscount.isPending}
-              isRemoving={removeDiscount.isPending}
-              serverError={setDiscount.error?.message ?? removeDiscount.error?.message ?? null}
-              onApply={applyDiscount}
-              onRemove={clearDiscount}
-            />
-          </AdminCard>
-          </div>
+        {/* Columna lateral: en celular va primero */}
+        <aside className="-order-1 flex min-w-0 flex-col gap-3.5 md:gap-5 lg:sticky lg:top-[84px] lg:order-none lg:flex-[1_1_280px]">
+          <VisibilityCard
+            isActive={item.isActive}
+            isSaving={setStatus.isPending}
+            checks={checks}
+            onToggle={handleToggleStatus}
+          />
+          <ProductInsightsCard productId={item.id} />
         </aside>
       </div>
-
-      {/* Espacio para que la barra de guardado no tape el final de la página */}
-      {isDirty && <div aria-hidden="true" className="h-16" />}
-
-      {/* Barra de guardado: aparece con cambios sin guardar, esté donde esté el scroll */}
-      {isDirty && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-admin-line bg-white/95 backdrop-blur-md animate-admin-fade md:left-[72px]">
-          <div className="mx-auto flex w-full max-w-[2000px] flex-wrap items-center gap-3 px-4 py-3 md:px-6 xl:px-8">
-            <p className="mr-auto flex items-center gap-2 text-sm font-medium">
-              <span aria-hidden="true" className="size-2 rounded-full bg-amber-500" />
-              Tienes cambios sin guardar
-            </p>
-            <button
-              type="button"
-              onClick={() => setFormKey((key) => key + 1)}
-              disabled={updateProduct.isPending}
-              className={adminSecondaryButtonClass}
-            >
-              Descartar
-            </button>
-            <button type="submit" form={FORM_ID} disabled={updateProduct.isPending} className={adminPrimaryButtonClass}>
-              {updateProduct.isPending ? 'Guardando...' : 'Guardar cambios'}
-            </button>
-          </div>
-        </div>
-      )}
 
       <AdminConfirmDialog
         isOpen={blocker.state === 'blocked'}
         title="¿Salir sin guardar?"
-        message="Tienes cambios en la información del producto que se perderán."
+        message="Tienes cambios en la información o el precio del producto que se perderán."
         confirmLabel="Salir sin guardar"
         loadingLabel="Saliendo..."
         isLoading={false}
@@ -479,16 +486,16 @@ function AdminProductEditPage() {
 
       <AdminConfirmDialog
         isOpen={confirmDeactivate}
-        title={`¿Desactivar "${item.name}"?`}
-        message="Dejará de verse en la tienda. Podrás activarlo de nuevo cuando quieras."
-        confirmLabel="Desactivar"
-        loadingLabel="Desactivando..."
+        title={`¿Ocultar "${item.name}"?`}
+        message="Dejará de verse en la tienda. Podrás mostrarlo de nuevo cuando quieras."
+        confirmLabel="Ocultar"
+        loadingLabel="Ocultando..."
         isLoading={setStatus.isPending}
         error={setStatus.error?.message ?? null}
         onConfirm={handleDeactivate}
         onCancel={() => setConfirmDeactivate(false)}
       />
-    </>
+    </PageFrame>
   )
 }
 

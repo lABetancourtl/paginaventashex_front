@@ -1,5 +1,6 @@
 import type { AdminCategoryNode } from '../../features/catalog/types'
-import { adminInputClass } from '../adminStyles'
+import { ChevronDown } from 'lucide-react'
+import { adminTextFieldClass } from '../adminStyles'
 
 interface HomeCategorySelectProps {
   id: string
@@ -22,7 +23,7 @@ function HomeCategorySelect({
   emptyLabel,
   disabled = false,
   describedBy,
-  className = '',
+  className = 'h-10',
 }: HomeCategorySelectProps) {
   const option = (category: AdminCategoryNode, hiddenByParent: boolean, label: string) => {
     const usable = category.isActive && !hiddenByParent
@@ -35,13 +36,14 @@ function HomeCategorySelect({
   }
 
   return (
+    <div className="relative">
     <select
       id={id}
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
       disabled={disabled}
       aria-describedby={describedBy}
-      className={`${adminInputClass} ${className}`}
+      className={`${adminTextFieldClass} cursor-pointer appearance-none truncate pr-9 ${className}`}
     >
       <option value="">{emptyLabel}</option>
       {tree.map((root) => (
@@ -51,6 +53,13 @@ function HomeCategorySelect({
         </optgroup>
       ))}
     </select>
+      <ChevronDown
+        size={15}
+        strokeWidth={1.75}
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8b8a84]"
+      />
+    </div>
   )
 }
 

@@ -8,11 +8,14 @@ export interface HomeItemPublic {
   mediaType: HomeMediaType
   categorySlug: string | null // null = no es un enlace
   categoryName: string | null
+  // Imagen para celular (ya recortada a 4:5). Solo llega si el banner tiene un único medio
+  mobileUrl?: string | null
 }
 
 export interface HomeProductCard {
   id: number
   name: string
+  categoryName?: string // Subcategoría: la tarjeta la muestra en lugar del nombre, como en el catálogo
   price: number
   discountPercent: number | null
   finalPrice: number
@@ -54,6 +57,7 @@ export interface HomeItemAdmin {
   id: number
   sectionId: number
   url: string
+  mobileUrl: string | null // Versión para celular (4:5); el admin la guarda aunque haya varios medios
   mediaType: HomeMediaType
   categoryId: number | null
   categoryName: string | null

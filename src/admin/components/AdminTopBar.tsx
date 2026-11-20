@@ -2,19 +2,69 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Menu as MenuHeadless, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { ExternalLink, LogOut, Menu, Plus, Search } from 'lucide-react'
+import { ExternalLink, FolderPlus, LayoutTemplate, LogOut, Menu, Package, Plus, Search } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import Modal from '../../components/Modal'
 import ModalTopBar from '../../components/ModalTopBar'
 import UserAvatar from '../../components/UserAvatar'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import AdminNav from './AdminNav'
 import { AdminBrand } from './AdminSidebar'
-import { adminIconButtonClass } from '../adminStyles'
+import {
+  adminIconButtonClass,
+  adminMenuIconTileClass,
+  adminMenuItemClass,
+  adminMenuPanelClass,
+} from '../adminStyles'
 
-const menuItemClass =
-  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-ink data-focus:bg-admin-bg'
+interface CreateOption {
+  label: string
+  description: string
+  icon: LucideIcon
+  to: string
+}
 
-// Barra superior del panel: marca, buscador de productos y cuenta
+// Opciones del botón "Crear"
+const createOptions: CreateOption[] = [
+  { label: 'Producto', description: 'Con variantes, precio e imágenes', icon: Package, to: '/admin/productos/nuevo' },
+  { label: 'Categoría', description: 'Principal o subcategoría', icon: FolderPlus, to: '/admin/categorias' },
+  { label: 'Bloque de inicio', description: 'Banner o estante de productos', icon: LayoutTemplate, to: '/admin/inicio' },
+]
+
+// Menú desplegable del botón "Crear"
+function CreateMenu() {
+  return (
+    <MenuHeadless>
+      <MenuButton
+        aria-label="Crear"
+        className="inline-flex h-[38px] min-w-[38px] items-center justify-center gap-1.5 rounded-[9px] bg-admin-accent px-0 text-sm font-medium text-white transition-colors hover:bg-admin-accent-hover data-open:bg-admin-accent-hover sm:px-3.5"
+      >
+        <Plus size={16} strokeWidth={2} aria-hidden="true" />
+        <span className="hidden sm:inline">Crear</span>
+      </MenuButton>
+      <MenuItems anchor={{ to: 'bottom end', gap: 8 }} className={`${adminMenuPanelClass} w-[280px]`}>
+        {createOptions.map(({ label, description, icon: Icon, to }) => (
+          <MenuItem key={label}>
+            <Link
+              to={to}
+              className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left data-focus:bg-[#f4f3ef]"
+            >
+              <span className={adminMenuIconTileClass}>
+                <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-sm font-medium text-admin-ink">{label}</span>
+                <span className="text-xs text-[#8b8a84]">{description}</span>
+              </span>
+            </Link>
+          </MenuItem>
+        ))}
+      </MenuItems>
+    </MenuHeadless>
+  )
+}
+
+// Barra superior del panel: buscador de productos, accesos y cuenta
 function AdminTopBar() {
   const navigate = useNavigate()
   const { session, logout } = useAuth()
@@ -31,7 +81,7 @@ function AdminTopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-admin-line bg-white/90 px-3 backdrop-blur-md md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-2.5 border-b border-admin-line bg-white px-3 md:px-6">
       <button
         type="button"
         onClick={() => setIsMenuOpen(true)}
@@ -42,11 +92,12 @@ function AdminTopBar() {
         <Menu size={20} strokeWidth={1.6} aria-hidden="true" />
       </button>
 
-      <Link to="/admin" aria-label="Ir al dashboard" className="shrink-0 md:w-[184px]">
+      {/* En computador la marca va en el menú lateral */}
+      <Link to="/admin" aria-label="Ir al dashboard" className="shrink-0 md:hidden">
         <AdminBrand />
       </Link>
 
-      <form role="search" onSubmit={handleSearch} className="hidden max-w-md flex-1 md:block">
+      <form role="search" onSubmit={handleSearch} className="hidden max-w-[460px] flex-1 md:block">
         <label htmlFor="admin-global-search" className="sr-only">
           Buscar productos
         </label>
@@ -55,7 +106,7 @@ function AdminTopBar() {
             size={16}
             strokeWidth={1.75}
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#8b8a84]"
           />
           <input
             id="admin-global-search"
@@ -63,31 +114,24 @@ function AdminTopBar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar productos por nombre…"
-            className="h-10 w-full rounded-lg border border-admin-line bg-admin-bg pl-9 pr-3 text-sm placeholder:text-ink-muted/70 transition-[border-color,box-shadow,background-color] focus:border-admin-accent focus:bg-white focus:outline-none focus:ring-4 focus:ring-admin-accent/10"
+            className="h-[38px] w-full rounded-[9px] border border-admin-line bg-admin-bg pl-9 pr-3 text-sm text-admin-ink placeholder:text-[#8b8a84] transition-[border-color,box-shadow,background-color] hover:border-[#d6d5cf] focus:border-admin-accent focus:bg-white focus:outline-none focus:ring-4 focus:ring-admin-accent/10"
           />
         </div>
       </form>
 
       <div className="ml-auto flex items-center gap-2">
-        <Link
-          to="/admin/productos/nuevo"
-          aria-label="Nuevo producto"
-          title="Nuevo producto"
-          className="flex size-10 items-center justify-center rounded-lg border border-admin-line text-ink-muted transition-colors hover:bg-admin-bg hover:text-ink"
-        >
-          <Plus size={18} strokeWidth={2} aria-hidden="true" />
-        </Link>
-
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Ver la tienda (se abre en otra pestaña)"
-          title="Ver la tienda"
-          className="hidden size-10 items-center justify-center rounded-lg border border-admin-line text-ink-muted transition-colors hover:bg-admin-bg hover:text-ink sm:flex"
+          aria-label="Ver tienda (se abre en otra pestaña)"
+          className="hidden h-[38px] items-center gap-1.5 whitespace-nowrap rounded-[9px] px-3 text-sm font-medium text-[#3d3c38] transition-colors hover:bg-admin-hover sm:flex"
         >
-          <ExternalLink size={17} strokeWidth={1.6} aria-hidden="true" />
+          <ExternalLink size={16} strokeWidth={1.75} aria-hidden="true" />
+          Ver tienda
         </a>
+
+        <CreateMenu />
 
         {session && (
           <MenuHeadless>
@@ -95,30 +139,25 @@ function AdminTopBar() {
               aria-label="Menú de la cuenta"
               className="ml-1 rounded-full ring-2 ring-transparent transition hover:ring-admin-line data-open:ring-admin-accent/30"
             >
-              <UserAvatar seed={session.email} size={38} className="ring-1 ring-admin-line" />
+              <UserAvatar seed={session.email} size={34} className="ring-1 ring-admin-line" />
             </MenuButton>
-            <MenuItems
-              anchor={{ to: 'bottom end', gap: 8 }}
-              className="z-40 w-64 animate-admin-fade rounded-xl border border-admin-line bg-white p-1 shadow-lg shadow-black/5 focus:outline-none"
-            >
-              <div className="border-b border-admin-line px-3 py-2.5">
-                <p className="text-xs text-ink-muted">Sesión iniciada como</p>
-                <p className="truncate text-sm font-medium">{session.email}</p>
+            <MenuItems anchor={{ to: 'bottom end', gap: 8 }} className={`${adminMenuPanelClass} w-64`}>
+              <div className="mb-1 border-b border-admin-row-line px-2.5 pb-2.5 pt-1.5">
+                <p className="text-xs text-[#8b8a84]">Sesión iniciada como</p>
+                <p className="truncate text-sm font-medium text-admin-ink">{session.email}</p>
               </div>
-              <div className="pt-1">
-                <MenuItem>
-                  <Link to="/" className={menuItemClass}>
-                    <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" className="text-ink-muted" />
-                    Ir a la tienda
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  <button type="button" onClick={logout} className={menuItemClass}>
-                    <LogOut size={15} strokeWidth={1.75} aria-hidden="true" className="text-ink-muted" />
-                    Cerrar sesión
-                  </button>
-                </MenuItem>
-              </div>
+              <MenuItem>
+                <Link to="/" className={adminMenuItemClass}>
+                  <ExternalLink size={15} strokeWidth={1.75} aria-hidden="true" className="text-[#6b6a65]" />
+                  Ir a la tienda
+                </Link>
+              </MenuItem>
+              <MenuItem>
+                <button type="button" onClick={logout} className={adminMenuItemClass}>
+                  <LogOut size={15} strokeWidth={1.75} aria-hidden="true" className="text-[#6b6a65]" />
+                  Cerrar sesión
+                </button>
+              </MenuItem>
             </MenuItems>
           </MenuHeadless>
         )}

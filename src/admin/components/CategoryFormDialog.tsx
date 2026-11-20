@@ -1,11 +1,11 @@
 import { useEffect, useId, useState } from 'react'
 import type { FormEvent } from 'react'
-import { AlertTriangle, Check, Copy, FolderPlus, Link2, Pencil, RefreshCw, Undo2 } from 'lucide-react'
+import { AlertTriangle, Check, ChevronDown, Copy, FolderPlus, Link2, Pencil, RefreshCw, Undo2 } from 'lucide-react'
 import { slugify } from '../../utils/text'
 import type { AdminCategoryNode } from '../../features/catalog/types'
 import AdminDialog, { AdminDialogBody, AdminDialogFooter } from './AdminDialog'
 import AdminField, { AdminInputGroup } from './AdminField'
-import { adminInputClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
+import { adminOutlineButtonClass, adminSolidButtonClass, adminTextFieldClass } from '../adminStyles'
 
 // Qué abrió el formulario: crear (con o sin padre) o editar
 export type CategoryDialogState =
@@ -114,7 +114,7 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
       <AdminDialogBody>
-        <AdminField id={`${baseId}-name`} label="Nombre" required error={errors.name} aside={`${name.length}/100`}>
+        <AdminField look="neutral" id={`${baseId}-name`} label="Nombre" required error={errors.name} aside={`${name.length}/100`}>
           <input
             id={`${baseId}-name`}
             type="text"
@@ -126,11 +126,11 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
             disabled={isSaving}
             aria-invalid={errors.name ? true : undefined}
             aria-describedby={errors.name ? `${baseId}-name-error` : undefined}
-            className={adminInputClass}
+            className={`${adminTextFieldClass} h-10`}
           />
         </AdminField>
 
-        <AdminField
+        <AdminField look="neutral"
           id={`${baseId}-parent`}
           label="Categoría principal"
           hint={
@@ -141,23 +141,31 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
                 : 'Será una subcategoría dentro de la principal elegida.'
           }
         >
-          <select
-            id={`${baseId}-parent`}
-            value={parentId ?? ''}
-            onChange={(e) => handleParentChange(e.target.value)}
-            disabled={isSaving || isEdit}
-            className={adminInputClass}
-          >
-            <option value="">Ninguna (es una categoría principal)</option>
-            {roots.map((root) => (
-              <option key={root.id} value={root.id}>
-                {root.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id={`${baseId}-parent`}
+              value={parentId ?? ''}
+              onChange={(e) => handleParentChange(e.target.value)}
+              disabled={isSaving || isEdit}
+              className={`${adminTextFieldClass} h-10 cursor-pointer appearance-none truncate pr-9 disabled:cursor-not-allowed disabled:bg-admin-bg disabled:opacity-100 disabled:text-[#8b8a84]`}
+            >
+              <option value="">Ninguna (es una categoría principal)</option>
+              {roots.map((root) => (
+                <option key={root.id} value={root.id}>
+                  {root.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={16}
+              strokeWidth={1.75}
+              aria-hidden="true"
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8b8a84]"
+            />
+          </div>
         </AdminField>
 
-        <AdminField
+        <AdminField look="neutral"
           id={`${baseId}-slug`}
           label="Slug"
           required
@@ -168,7 +176,7 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
                 type="button"
                 onClick={resetSlug}
                 disabled={isSaving}
-                className="inline-flex items-center gap-1 font-medium text-admin-accent hover:underline"
+                className="inline-flex items-center gap-1 font-medium text-admin-accent hover:text-admin-accent-hover hover:underline"
               >
                 <RefreshCw size={12} strokeWidth={2} aria-hidden="true" />
                 Generar desde el nombre
@@ -177,7 +185,7 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
           }
           hint="Se genera solo a partir del nombre. Solo minúsculas, números y guiones."
         >
-          <AdminInputGroup prefix={<span className="font-mono text-xs">{SLUG_PREFIX}</span>}>
+          <AdminInputGroup look="neutral" prefix={<span className="font-mono text-xs">{SLUG_PREFIX}</span>}>
             <input
               id={`${baseId}-slug`}
               type="text"
@@ -187,18 +195,18 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
               disabled={isSaving}
               aria-invalid={errors.slug ? true : undefined}
               aria-describedby={errors.slug ? `${baseId}-slug-error` : `${baseId}-slug-hint`}
-              className={`${adminInputClass} pl-[92px] font-mono`}
+              className={`${adminTextFieldClass} h-10 pl-[92px] font-mono`}
             />
           </AdminInputGroup>
         </AdminField>
 
         {/* Vista previa de la dirección */}
-        <div className="flex items-center gap-2 rounded-xl border border-admin-line bg-admin-bg/60 px-3 py-2.5">
-          <Link2 size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-ink-muted" />
-          <p className="min-w-0 flex-1 truncate font-mono text-xs text-ink-muted">
+        <div className="flex items-center gap-2 rounded-[10px] bg-admin-bg px-3 py-2.5">
+          <Link2 size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-[#8b8a84]" />
+          <p className="min-w-0 flex-1 truncate font-mono text-xs text-[#6b6a65]">
             {window.location.host}
             {SLUG_PREFIX}
-            <span className="text-ink">{slug || 'slug'}</span>
+            <span className="text-admin-ink">{slug || 'slug'}</span>
           </p>
           <button
             type="button"
@@ -206,7 +214,7 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
             disabled={!slug}
             aria-label="Copiar dirección"
             title="Copiar dirección"
-            className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-ink-muted transition-colors hover:bg-white hover:text-ink disabled:opacity-40"
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-[#6b6a65] transition-colors hover:bg-white hover:text-admin-ink disabled:opacity-40"
           >
             {copied ? (
               <Check size={13} strokeWidth={2} aria-hidden="true" className="text-green-600" />
@@ -218,7 +226,7 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
         </div>
 
         {slugChanged && (
-          <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+          <div className="flex gap-2.5 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
             <AlertTriangle size={15} strokeWidth={1.75} aria-hidden="true" className="mt-px shrink-0" />
             <div className="flex-1">
               <p>
@@ -239,22 +247,22 @@ function CategoryForm({ state, roots, isSaving, serverError, onSubmit, onCancel 
         )}
 
         {serverError && (
-          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
+          <p role="alert" className="rounded-[10px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
             {serverError}
           </p>
         )}
       </AdminDialogBody>
 
-      <AdminDialogFooter>
-        <button type="button" onClick={onCancel} disabled={isSaving} className={adminSecondaryButtonClass}>
+      <AdminDialogFooter look="neutral">
+        <button type="button" onClick={onCancel} disabled={isSaving} className={adminOutlineButtonClass}>
           Cancelar
         </button>
         {!isEdit && (
-          <button type="submit" value="another" disabled={isSaving} className={adminSecondaryButtonClass}>
+          <button type="submit" value="another" disabled={isSaving} className={adminOutlineButtonClass}>
             Crear y agregar otra
           </button>
         )}
-        <button type="submit" disabled={isSaving} className={adminPrimaryButtonClass}>
+        <button type="submit" disabled={isSaving} className={adminSolidButtonClass}>
           {isSaving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear categoría'}
         </button>
       </AdminDialogFooter>
@@ -290,6 +298,7 @@ function CategoryFormDialog({ state, roots, isSaving, serverError, onSubmit, onC
       title={title}
       description={description}
       icon={state?.mode === 'edit' ? Pencil : FolderPlus}
+      look="neutral"
     >
       {state && (
         <CategoryForm

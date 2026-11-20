@@ -1,19 +1,17 @@
 import { useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
-import { PackageSearch, Plus, Search, Tag, X } from 'lucide-react'
+import { CloudOff, Package, Plus, RotateCw } from 'lucide-react'
 import { SITE_NAME } from '../../config/site'
 import { useAdminCategoryTree } from '../../features/catalog/hooks/useAdminCategoryTree'
 import { useAdminProducts } from '../../features/catalog/hooks/useAdminProducts'
 import { useSetProductStatus } from '../../features/catalog/hooks/useProductMutations'
 import type { AdminCategoryNode, Product } from '../../features/catalog/types'
 import AdminPageHeader from '../components/AdminPageHeader'
-import AdminCard from '../components/AdminCard'
 import AdminConfirmDialog from '../components/AdminConfirmDialog'
 import AdminPagination from '../components/AdminPagination'
 import AdminProductFilters from '../components/AdminProductFilters'
 import type { StatusFilter } from '../components/AdminProductFilters'
 import AdminProductList, { AdminProductListSkeleton } from '../components/AdminProductList'
-import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
 import { useAdminToast } from '../toast/toastContext'
 
 function parsePage(value: string | null): number {
@@ -34,33 +32,11 @@ function getCategoryIds(tree: AdminCategoryNode[], id: number): number[] {
   return [id]
 }
 
-// Nombre para mostrar de una categoría (ej: "Niño › Bodys")
-function getCategoryLabel(tree: AdminCategoryNode[], id: number): string | null {
-  for (const root of tree) {
-    if (root.id === id) return `${root.name} (todas)`
-    const child = root.children.find((c) => c.id === id)
-    if (child) return `${root.name} › ${child.name}`
-  }
-  return null
-}
+const primaryButtonClass =
+  'inline-flex h-[38px] items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-admin-accent pl-3.5 pr-4 text-sm font-medium text-white transition-colors hover:bg-admin-accent-hover'
 
-// Pastilla de un filtro aplicado, con su "×" para quitarlo
-function FilterChip({ icon: Icon, label, onRemove }: { icon: typeof Tag; label: string; onRemove: () => void }) {
-  return (
-    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-admin-accent/25 bg-admin-accent/5 py-0.5 pl-2.5 pr-1 text-xs font-medium text-admin-accent">
-      <Icon size={12} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-      <span className="truncate">{label}</span>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Quitar filtro: ${label}`}
-        className="flex size-5 shrink-0 items-center justify-center rounded-full hover:bg-admin-accent/15"
-      >
-        <X size={12} strokeWidth={2} aria-hidden="true" />
-      </button>
-    </span>
-  )
-}
+const outlineButtonClass =
+  'inline-flex h-[34px] items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#dcdbd6] bg-white px-3.5 text-[13px] font-medium text-admin-ink transition-colors hover:bg-admin-bg'
 
 function AdminProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -175,34 +151,38 @@ function AdminProductsPage() {
     content = <AdminProductListSkeleton />
   } else if (products.error) {
     content = (
-      <p role="alert" className="px-5 py-10 text-center text-sm text-danger">
-        {products.error.message}
-      </p>
+      <div role="alert" className="flex flex-col items-center gap-2 px-6 pb-[60px] pt-14 text-center">
+        <span className="flex size-11 items-center justify-center rounded-full bg-[#fdecea] text-[#b42318]">
+          <CloudOff size={20} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <p className="mt-1 text-[15px] font-semibold">No pudimos cargar los productos</p>
+        <p className="max-w-[340px] text-sm text-[#6b6a65]">{products.error.message}</p>
+        <button type="button" onClick={() => products.refetch()} className={`${outlineButtonClass} mt-2`}>
+          <RotateCw size={14} strokeWidth={1.75} aria-hidden="true" />
+          Reintentar
+        </button>
+      </div>
     )
   } else if (products.data.items.length === 0) {
-    content = (
-      <div className="flex flex-col items-center px-5 py-14 text-center">
-        <span className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-admin-bg text-ink-muted">
-          <PackageSearch size={22} strokeWidth={1.5} aria-hidden="true" />
+    content = hasFilters ? (
+      <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+        <p className="text-[15px] font-semibold">Ningún producto coincide</p>
+        <p className="text-sm text-[#6b6a65]">Prueba con otra palabra o quita los filtros.</p>
+        <button type="button" onClick={clearFilters} className={`${outlineButtonClass} mt-1.5`}>
+          Limpiar filtros
+        </button>
+      </div>
+    ) : (
+      <div className="flex flex-col items-center gap-2 px-6 pb-[68px] pt-16 text-center">
+        <span className="flex size-[52px] items-center justify-center rounded-[14px] bg-admin-hover text-[#4a4945]">
+          <Package size={24} strokeWidth={1.5} aria-hidden="true" />
         </span>
-        <p className="text-sm font-medium">
-          {hasFilters ? 'Ningún producto coincide con los filtros' : 'Todavía no hay productos'}
-        </p>
-        <p className="mt-1 text-sm text-ink-muted">
-          {hasFilters ? 'Prueba con otra búsqueda o quita los filtros.' : 'Crea el primero para empezar a vender.'}
-        </p>
-        <div className="mt-5">
-          {hasFilters ? (
-            <button type="button" onClick={clearFilters} className={adminSecondaryButtonClass}>
-              Quitar filtros
-            </button>
-          ) : (
-            <Link to="/admin/productos/nuevo" className={adminPrimaryButtonClass}>
-              <Plus size={16} strokeWidth={2} aria-hidden="true" />
-              Nuevo producto
-            </Link>
-          )}
-        </div>
+        <p className="mt-1.5 text-base font-semibold">Todavía no hay productos</p>
+        <p className="max-w-[380px] text-sm text-[#6b6a65]">Crea el primero para empezar a vender.</p>
+        <Link to="/admin/productos/nuevo" className={`${primaryButtonClass} mt-2.5`}>
+          <Plus size={14} strokeWidth={2} aria-hidden="true" />
+          Nuevo producto
+        </Link>
       </div>
     )
   } else {
@@ -232,71 +212,47 @@ function AdminProductsPage() {
   }
 
   const totalItems = products.data?.totalItems
-  const categoryLabel =
-    categoryId !== null && categories.data ? getCategoryLabel(categories.data, categoryId) : null
 
   return (
     <>
       <title>{`Productos | Admin ${SITE_NAME}`}</title>
 
       <AdminPageHeader
-        title="Productos"
-        description={
-          totalItems !== undefined
-            ? `${totalItems} ${totalItems === 1 ? 'producto' : 'productos'}${hasFilters ? ' con estos filtros' : ' en el catálogo'}`
-            : 'Crea, edita y organiza los productos del catálogo.'
-        }
-        actions={
-          // Secundario a propósito: crear no es la tarea principal de esta página
-          <Link to="/admin/productos/nuevo" className={adminSecondaryButtonClass}>
-            <Plus size={16} strokeWidth={2} aria-hidden="true" />
-            Nuevo producto
-          </Link>
-        }
-      />
+          title="Productos"
+          description={
+            totalItems !== undefined
+              ? `${totalItems} ${totalItems === 1 ? 'producto' : 'productos'}${hasFilters ? ' con estos filtros' : ' en el catálogo'}`
+              : 'Crea, edita y organiza los productos del catálogo.'
+          }
+          actions={
+            <Link to="/admin/productos/nuevo" className={primaryButtonClass}>
+              <Plus size={16} strokeWidth={2} aria-hidden="true" />
+              Nuevo producto
+            </Link>
+          }
+        />
 
-      <AdminCard flush>
-        <div className="border-b border-admin-line px-4 py-4 sm:px-5">
-          <AdminProductFilters
-            search={search}
-            categoryId={categoryId}
-            status={status}
-            categories={categories.data ?? []}
-            counts={counts}
-            onSearchChange={(value) => updateParams({ q: value }, true)}
-            onCategoryChange={(id) => updateParams({ categoria: id === null ? null : String(id) })}
-            onStatusChange={(value) => updateParams({ estado: value === 'todos' ? null : value })}
-          />
+      <div className="flex flex-col gap-4">
+        <AdminProductFilters
+          search={search}
+          categoryId={categoryId}
+          status={status}
+          categories={categories.data ?? []}
+          counts={counts}
+          onSearchChange={(value) => updateParams({ q: value }, true)}
+          onCategoryChange={(id) => updateParams({ categoria: id === null ? null : String(id) })}
+          onStatusChange={(value) => updateParams({ estado: value === 'todos' ? null : value })}
+        />
 
-          {/* Filtros aplicados (el estado ya se ve en las pestañas) */}
-          {(search !== '' || categoryLabel !== null) && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-ink-muted">Filtrando por:</span>
-              {search !== '' && (
-                <FilterChip icon={Search} label={`"${search}"`} onRemove={() => updateParams({ q: null }, true)} />
-              )}
-              {categoryLabel !== null && (
-                <FilterChip icon={Tag} label={categoryLabel} onRemove={() => updateParams({ categoria: null })} />
-              )}
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-xs font-medium text-ink-muted underline-offset-2 hover:text-ink hover:underline"
-              >
-                Quitar todos
-              </button>
-            </div>
-          )}
-        </div>
-        {content}
-      </AdminCard>
+        <section className="overflow-hidden rounded-[14px] border border-admin-line bg-white">{content}</section>
+      </div>
 
       <AdminConfirmDialog
         isOpen={toDeactivate !== null}
-        title={`¿Desactivar "${toDeactivate?.name ?? ''}"?`}
-        message="Dejará de verse en la tienda. Podrás activarlo de nuevo cuando quieras."
-        confirmLabel="Desactivar"
-        loadingLabel="Desactivando..."
+        title={`¿Ocultar "${toDeactivate?.name ?? ''}"?`}
+        message="Dejará de verse en la tienda. Podrás mostrarlo de nuevo cuando quieras."
+        confirmLabel="Ocultar"
+        loadingLabel="Ocultando..."
         isLoading={setStatus.isPending}
         error={setStatus.error?.message ?? null}
         onConfirm={confirmDeactivate}

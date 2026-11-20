@@ -1,13 +1,15 @@
 import { useId, useState } from 'react'
 import type { ChangeEvent, DragEvent } from 'react'
-import { ArrowDown, ArrowUp, ImagePlus, Link2, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ImagePlus, Link2, Smartphone, Trash2 } from 'lucide-react'
 import AdminConfirmDialog from './AdminConfirmDialog'
 import HomeCategorySelect from './HomeCategorySelect'
 import { ApiRequestError } from '../../api/client'
 import { cloudinaryUrl } from '../../utils/cloudinary'
 import {
   useDeleteHomeItem,
+  useRemoveHomeItemMobile,
   useReorderHomeItem,
+  useSetHomeItemMobile,
   useUpdateHomeItemLink,
   useUploadHomeItem,
 } from '../../features/home/hooks/useHomeAdmin'
@@ -23,8 +25,11 @@ import {
   MAX_BANNER_VIDEO_MB,
   uploadErrorMessage,
   validateBannerFile,
+  validateBannerMobileFile,
 } from '../homeSections'
-import { adminIconButtonClass } from '../adminStyles'
+import { cloudinaryResizeAfter } from '../../utils/cloudinary'
+const tileButtonClass =
+  'inline-flex size-8 items-center justify-center rounded-lg text-[#6b6a65] transition-colors hover:bg-admin-hover hover:text-admin-ink disabled:cursor-not-allowed disabled:opacity-40'
 
 interface UploadProgress {
   current: number
@@ -44,16 +49,45 @@ interface BannerTileProps {
   onMove: (direction: -1 | 1) => void
   onLinkChange: (categoryId: number | null) => void
   onDelete: () => void
+  // Versión para celular: solo cuando el banner tiene un único medio
+  canHaveMobile: boolean
+  mobileStatus: string | null // "Subiendo… 40%" o "Quitando…"; null = sin tarea en curso
+  onMobileFile: (file: File) => void
+  onMobileRemove: () => void
 }
 
-function BannerTile({ item, index, total, tree, isBusy, isSavingLink, onMove, onLinkChange, onDelete }: BannerTileProps) {
+const mobileButtonClass =
+  'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[#dcdbd6] bg-white px-2.5 text-xs font-medium text-admin-ink transition-colors hover:bg-admin-bg'
+
+function BannerTile({
+  item,
+  index,
+  total,
+  tree,
+  isBusy,
+  isSavingLink,
+  onMove,
+  onLinkChange,
+  onDelete,
+  canHaveMobile,
+  mobileStatus,
+  onMobileFile,
+  onMobileRemove,
+}: BannerTileProps) {
   const selectId = useId()
+  const mobileInputId = useId()
+  const mobileBusy = isBusy || mobileStatus !== null
+  const handleMobileInput = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // Permite volver a elegir el mismo archivo
+    if (file) onMobileFile(file)
+  }
   const linkInactive = item.categoryId !== null && !isCategoryUsable(tree, item.categoryId)
   const kind = item.mediaType === 'Video' ? 'Video' : 'Imagen'
 
   return (
-    <li className="flex gap-2.5 rounded-lg border border-admin-line bg-white p-2">
-      <div className="w-16 shrink-0 overflow-hidden rounded-[5px] bg-admin-bg">
+    <li className="flex gap-3 rounded-[10px] border border-admin-line bg-white p-2.5">
+      <div className="w-16 shrink-0 overflow-hidden rounded-lg bg-admin-active">
         {item.mediaType === 'Video' ? (
           <video src={item.url} autoPlay muted loop playsInline preload="metadata" className="size-full object-cover" />
         ) : (
@@ -63,9 +97,9 @@ function BannerTile({ item, index, total, tree, isBusy, isSavingLink, onMove, on
 
       <div className="min-w-0 flex-1 space-y-1.5">
         <p className="text-[13px] font-medium">
-          <span className="font-mono text-xs text-ink-muted">{index + 1}</span> · {kind}
+          <span className="font-mono text-xs text-[#9a9993]">{String(index + 1).padStart(2, '0')}</span> · {kind}
         </p>
-        <label htmlFor={selectId} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted">
+        <label htmlFor={selectId} className="flex items-center gap-1 text-[11px] font-medium text-[#8b8a84]">
           <Link2 size={12} strokeWidth={2} aria-hidden="true" />
           {isSavingLink ? 'Guardando enlace…' : 'Lleva a'}
         </label>
@@ -76,10 +110,61 @@ function BannerTile({ item, index, total, tree, isBusy, isSavingLink, onMove, on
           tree={tree}
           emptyLabel="Sin enlace (solo imagen)"
           disabled={isBusy || isSavingLink}
-          className="py-1.5 text-xs"
+          className="h-9 text-xs"
         />
         {linkInactive && (
-          <p className="text-[11px] text-amber-700">La categoría está inactiva: en la tienda no será un enlace.</p>
+          <p className="text-[11px] font-medium text-[#8a5a00]">La categoría está inactiva: en la tienda no será un enlace.</p>
+        )}
+
+        {/* Versión para celular (4:5): reemplaza a la principal en pantallas chicas */}
+        {canHaveMobile && (
+          <div className="pt-1.5">
+            <p className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-[#8b8a84]">
+              <Smartphone size={12} strokeWidth={2} aria-hidden="true" />
+              {mobileStatus ?? 'Versión celular (4:5)'}
+            </p>
+            <input
+              id={mobileInputId}
+              type="file"
+              accept={BANNER_IMAGE_TYPES.join(',')}
+              onChange={handleMobileInput}
+              disabled={mobileBusy}
+              className="sr-only"
+            />
+            {item.mobileUrl ? (
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={cloudinaryResizeAfter(item.mobileUrl, 160)}
+                  alt="Versión para celular"
+                  className="aspect-[4/5] w-12 shrink-0 rounded-md bg-admin-active object-cover"
+                />
+                <div className="flex flex-wrap gap-1.5">
+                  <label
+                    htmlFor={mobileInputId}
+                    className={`${mobileButtonClass} ${mobileBusy ? 'pointer-events-none opacity-50' : ''}`}
+                  >
+                    Reemplazar
+                  </label>
+                  <button
+                    type="button"
+                    onClick={onMobileRemove}
+                    disabled={mobileBusy}
+                    className="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-medium text-[#b42318] transition-colors hover:bg-[#fdecea] disabled:opacity-50"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label
+                htmlFor={mobileInputId}
+                className={`${mobileButtonClass} border-dashed ${mobileBusy ? 'pointer-events-none opacity-50' : ''}`}
+              >
+                <ImagePlus size={13} strokeWidth={1.75} aria-hidden="true" />
+                Agregar versión celular (4:5)
+              </label>
+            )}
+          </div>
         )}
       </div>
 
@@ -91,7 +176,7 @@ function BannerTile({ item, index, total, tree, isBusy, isSavingLink, onMove, on
           disabled={isBusy}
           aria-label={`Mover el medio ${index + 1} antes`}
           title="Mover antes (más a la izquierda)"
-          className={`${adminIconButtonClass} size-7 ${index === 0 ? 'invisible' : ''}`}
+          className={`${tileButtonClass} ${index === 0 ? 'invisible' : ''}`}
         >
           <ArrowUp size={15} strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -101,7 +186,7 @@ function BannerTile({ item, index, total, tree, isBusy, isSavingLink, onMove, on
           disabled={isBusy}
           aria-label={`Mover el medio ${index + 1} después`}
           title="Mover después (más a la derecha)"
-          className={`${adminIconButtonClass} size-7 ${index === total - 1 ? 'invisible' : ''}`}
+          className={`${tileButtonClass} ${index === total - 1 ? 'invisible' : ''}`}
         >
           <ArrowDown size={15} strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -111,7 +196,7 @@ function BannerTile({ item, index, total, tree, isBusy, isSavingLink, onMove, on
           disabled={isBusy}
           aria-label={`Quitar el medio ${index + 1}`}
           title="Quitar"
-          className={`${adminIconButtonClass} mt-auto size-7 hover:bg-red-50 hover:text-danger`}
+          className={`${tileButtonClass} mt-auto hover:bg-[#fdecea]! hover:text-[#b42318]!`}
         >
           <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -129,19 +214,21 @@ interface HomeBannerEditorProps {
 
 function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
   const inputId = useId()
-  const newLinkId = useId()
   const toast = useAdminToast()
 
   const upload = useUploadHomeItem(sectionId)
   const updateLink = useUpdateHomeItemLink(sectionId)
   const reorder = useReorderHomeItem(sectionId)
   const remove = useDeleteHomeItem(sectionId)
+  const setMobile = useSetHomeItemMobile(sectionId)
+  const removeMobile = useRemoveHomeItemMobile(sectionId)
 
-  const [newLink, setNewLink] = useState<number | null>(null)
   const [progress, setProgress] = useState<UploadProgress | null>(null)
   const [problems, setProblems] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [toDelete, setToDelete] = useState<HomeItemAdmin | null>(null)
+  const [mobileToRemove, setMobileToRemove] = useState<HomeItemAdmin | null>(null)
+  const [mobileProgress, setMobileProgress] = useState<{ itemId: number; percent: number } | null>(null)
 
   const remaining = MAX_BANNER_ITEMS - items.length
   const isUploading = progress !== null
@@ -173,7 +260,7 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
       try {
         await upload.mutateAsync({
           file,
-          categoryId: newLink,
+          categoryId: null, // El enlace se elige después en cada medio
           onProgress: (percent) => setProgress((prev) => (prev ? { ...prev, percent } : prev)),
         })
         uploaded++
@@ -227,6 +314,47 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
     )
   }
 
+  // ─── Versión para celular ─────────────────────────────────
+  const uploadMobile = (item: HomeItemAdmin, file: File) => {
+    const problem = validateBannerMobileFile(file)
+    if (problem) {
+      toast({ tone: 'error', message: problem })
+      return
+    }
+    const hadMobile = item.mobileUrl !== null
+    setMobileProgress({ itemId: item.id, percent: 0 })
+    setMobile.mutate(
+      {
+        itemId: item.id,
+        file,
+        onProgress: (percent) => setMobileProgress({ itemId: item.id, percent }),
+      },
+      {
+        onSuccess: () => toast({ message: hadMobile ? 'Versión celular reemplazada.' : 'Versión celular agregada.' }),
+        onError: (err) => toast({ tone: 'error', message: uploadErrorMessage(err) }),
+        onSettled: () => setMobileProgress(null),
+      },
+    )
+  }
+
+  const confirmRemoveMobile = () => {
+    if (!mobileToRemove) return
+    removeMobile.mutate(mobileToRemove.id, {
+      onSuccess: () => {
+        setMobileToRemove(null)
+        toast({ message: 'Versión celular quitada: en celular se usará la imagen principal.' })
+      },
+    })
+  }
+
+  const mobileStatusOf = (item: HomeItemAdmin) => {
+    if (mobileProgress?.itemId === item.id) {
+      return mobileProgress.percent < 100 ? `Subiendo versión celular… ${mobileProgress.percent}%` : 'Procesando…'
+    }
+    if (removeMobile.isPending && removeMobile.variables === item.id) return 'Quitando versión celular…'
+    return null
+  }
+
   const confirmDelete = () => {
     if (!toDelete) return
     remove.mutate(toDelete.id, {
@@ -255,21 +383,35 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
               remove.reset()
               setToDelete(item)
             }}
+            canHaveMobile={items.length === 1}
+            mobileStatus={mobileStatusOf(item)}
+            onMobileFile={(file) => uploadMobile(item, file)}
+            onMobileRemove={() => {
+              removeMobile.reset()
+              setMobileToRemove(item)
+            }}
           />
         ))}
       </ul>
 
+      {items.length > 1 && items.some((item) => item.mobileUrl) && (
+        <p className="flex items-start gap-1.5 rounded-[10px] bg-admin-bg px-3 py-2 text-[11px] text-[#6b6a65]">
+          <Smartphone size={13} strokeWidth={1.75} aria-hidden="true" className="mt-px shrink-0" />
+          La versión celular solo se usa cuando el banner tiene una foto. Se conserva por si vuelves a dejar una sola.
+        </p>
+      )}
+
       {remaining > 0 && (
-        <div className="space-y-2">
+        <div>
           <label
             htmlFor={inputId}
             onDragOver={handleDragOver}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            className={`flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed px-3 py-2 text-center text-[13px] transition-colors ${
+            className={`flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed px-3 py-2 text-center text-[13px] font-medium transition-colors md:min-h-10 ${
               isDragging
                 ? 'border-admin-accent bg-admin-accent/5 text-admin-accent'
-                : 'border-ink/20 bg-admin-bg/50 text-ink/80 hover:border-admin-accent/50 hover:bg-admin-accent/5'
+                : 'border-[#d0cfc9] bg-white text-[#4a4945] hover:border-admin-accent hover:text-admin-accent'
             } ${isBusy ? 'pointer-events-none opacity-50' : ''}`}
           >
             <ImagePlus size={16} strokeWidth={1.6} aria-hidden="true" className={isUploading ? 'animate-pulse' : ''} />
@@ -285,25 +427,10 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
             className="sr-only"
           />
 
-          <div>
-            <label htmlFor={newLinkId} className="mb-1 flex items-center gap-1 text-[11px] font-medium text-ink-muted">
-              <Link2 size={12} strokeWidth={2} aria-hidden="true" />
-              El nuevo medio lleva a
-            </label>
-            <HomeCategorySelect
-              id={newLinkId}
-              value={newLink}
-              onChange={setNewLink}
-              tree={tree}
-              emptyLabel="Sin enlace (solo imagen)"
-              disabled={isBusy}
-              className="py-1.5 text-xs"
-            />
-          </div>
         </div>
       )}
 
-      <p className="text-[11px] leading-relaxed text-ink-muted">
+      <p className="text-[11px] leading-relaxed text-[#8b8a84]">
         De 1 a {MAX_BANNER_ITEMS}, uno al lado del otro y en este orden; uno solo ocupa todo el ancho. Imágenes JPG,
         PNG, WebP o GIF hasta {MAX_BANNER_IMAGE_MB} MB. Videos MP4, WebM o MOV hasta {MAX_BANNER_VIDEO_MB} MB (sin
         sonido y en bucle). Si la imagen lleva texto, debe ir dentro de la imagen. También puedes arrastrar los
@@ -312,7 +439,7 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
 
       {progress && (
         <div role="status" className="space-y-1.5">
-          <p className="text-xs text-ink-muted">
+          <p className="text-xs text-[#6b6a65]">
             Subiendo {progress.total > 1 ? `${progress.current} de ${progress.total}: ` : ''}
             {progress.fileName} ({progress.percent}%)
             {progress.percent === 100 && ' · procesando…'}
@@ -323,7 +450,7 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={progress.percent}
-            className="h-1.5 overflow-hidden rounded-full bg-admin-bg"
+            className="h-1 overflow-hidden rounded-full bg-admin-active"
           >
             <div className="h-full rounded-full bg-admin-accent transition-[width]" style={{ width: `${progress.percent}%` }} />
           </div>
@@ -331,12 +458,24 @@ function HomeBannerEditor({ sectionId, items, tree }: HomeBannerEditorProps) {
       )}
 
       {problems.length > 0 && (
-        <ul role="alert" className="space-y-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-danger">
+        <ul role="alert" className="space-y-1 rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-danger">
           {problems.map((problem) => (
             <li key={problem}>{problem}</li>
           ))}
         </ul>
       )}
+
+      <AdminConfirmDialog
+        isOpen={mobileToRemove !== null}
+        title="¿Quitar la versión celular?"
+        message="Se borrará de forma permanente. En celular se mostrará la imagen principal recortada."
+        confirmLabel="Quitar"
+        loadingLabel="Quitando..."
+        isLoading={removeMobile.isPending}
+        error={removeMobile.error?.message ?? null}
+        onConfirm={confirmRemoveMobile}
+        onCancel={() => setMobileToRemove(null)}
+      />
 
       <AdminConfirmDialog
         isOpen={toDelete !== null}

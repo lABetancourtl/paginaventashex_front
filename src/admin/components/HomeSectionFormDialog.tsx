@@ -8,7 +8,7 @@ import HomeCategorySelect from './HomeCategorySelect'
 import type { AdminCategoryNode } from '../../features/catalog/types'
 import type { HomeSectionAdmin, HomeSectionType } from '../../features/home/types'
 import { MAX_SECTION_TITLE } from '../homeSections'
-import { adminInputClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
+import { adminOutlineButtonClass, adminSolidButtonClass, adminTextFieldClass } from '../adminStyles'
 
 export type HomeSectionDialogState = { mode: 'create' } | { mode: 'edit'; section: HomeSectionAdmin }
 
@@ -58,6 +58,7 @@ function HomeSectionFormDialog({ state, tree, isSaving, serverError, onSubmit, o
       title={isEdit ? 'Editar estante' : 'Agregar bloque'}
       description={isEdit ? undefined : 'Nace inactivo y al final de la página. Actívalo cuando esté listo.'}
       icon={isEdit ? Pencil : LayoutTemplate}
+      look="neutral"
     >
       {/* Se monta cada vez que se abre: arranca con los datos de la sección (o en blanco) */}
       {state && (
@@ -105,12 +106,12 @@ function SectionForm({ section, tree, isSaving, serverError, onSubmit, onClose }
       <AdminDialogBody>
         {!isEdit && (
           <fieldset>
-            <legend className="mb-2 text-[13px] font-medium text-ink">Tipo de bloque</legend>
+            <legend className="mb-2 text-[13px] font-medium text-admin-ink">Tipo de bloque</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               {typeOptions.map(({ value, label, description, icon: Icon }) => (
                 <label
                   key={value}
-                  className="flex cursor-pointer flex-col gap-2 rounded-xl border border-admin-line p-4 transition-colors hover:border-ink/20 has-checked:border-admin-accent has-checked:bg-admin-accent/5 has-checked:ring-4 has-checked:ring-admin-accent/10 has-focus-visible:outline-2 has-focus-visible:outline-admin-accent"
+                  className="flex cursor-pointer flex-col gap-2 rounded-[10px] border border-[#e2e1dc] p-4 transition-colors hover:border-[#cbcac4] has-checked:border-admin-ink has-checked:shadow-[inset_0_0_0_1px_var(--color-admin-ink)] has-focus-visible:outline-2 has-focus-visible:outline-admin-accent"
                 >
                   <input
                     type="radio"
@@ -120,11 +121,11 @@ function SectionForm({ section, tree, isSaving, serverError, onSubmit, onClose }
                     onChange={() => setType(value)}
                     className="sr-only"
                   />
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-admin-bg text-admin-accent">
+                  <span className="flex size-9 items-center justify-center rounded-[10px] bg-admin-hover text-[#3d3c38]">
                     <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <span className="text-sm font-semibold">{label}</span>
-                  <span className="text-xs text-ink-muted">{description}</span>
+                  <span className="text-xs text-[#6b6a65]">{description}</span>
                 </label>
               ))}
             </div>
@@ -133,7 +134,7 @@ function SectionForm({ section, tree, isSaving, serverError, onSubmit, onClose }
 
         {isShelf && (
           <>
-            <AdminField
+            <AdminField look="neutral"
               id={titleId}
               label="Título"
               hint="Opcional. Va arriba a la izquierda del estante, ej: HOMBRE."
@@ -147,11 +148,11 @@ function SectionForm({ section, tree, isSaving, serverError, onSubmit, onClose }
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Sin título"
                 aria-describedby={`${titleId}-hint`}
-                className={adminInputClass}
+                className={`${adminTextFieldClass} h-10`}
               />
             </AdminField>
 
-            <AdminField
+            <AdminField look="neutral"
               id={categoryId}
               label="Botón “Ver todo”"
               hint="Opcional. Lleva al catálogo de esa categoría o subcategoría."
@@ -169,17 +170,17 @@ function SectionForm({ section, tree, isSaving, serverError, onSubmit, onClose }
         )}
 
         {serverError && (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">
             {serverError}
           </p>
         )}
       </AdminDialogBody>
 
-      <AdminDialogFooter>
-        <button type="button" onClick={onClose} disabled={isSaving} className={adminSecondaryButtonClass}>
+      <AdminDialogFooter look="neutral">
+        <button type="button" onClick={onClose} disabled={isSaving} className={adminOutlineButtonClass}>
           Cancelar
         </button>
-        <button type="submit" disabled={isSaving} className={adminPrimaryButtonClass}>
+        <button type="submit" disabled={isSaving} className={adminSolidButtonClass}>
           {isSaving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Agregar bloque'}
         </button>
       </AdminDialogFooter>

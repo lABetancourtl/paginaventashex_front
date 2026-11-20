@@ -1,27 +1,26 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { ChevronDown, Eye, EyeOff, LayoutGrid, Search, X } from 'lucide-react'
+import { ChevronDown, Search, X } from 'lucide-react'
 import type { AdminCategoryNode } from '../../features/catalog/types'
-import AdminTabs from './AdminTabs'
-import type { AdminTab } from './AdminTabs'
-import { adminInputClass } from '../adminStyles'
 
 export type StatusFilter = 'todos' | 'activos' | 'inactivos'
 
 const SEARCH_DELAY_MS = 400
-const fieldClass = `${adminInputClass} h-10 py-0`
 
-const statusTabs: AdminTab<StatusFilter>[] = [
-  { value: 'todos', label: 'Todos', icon: LayoutGrid },
-  { value: 'activos', label: 'Activos', icon: Eye },
-  { value: 'inactivos', label: 'Inactivos', icon: EyeOff },
+const statusFilters: { value: StatusFilter; label: string; dot?: string }[] = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'activos', label: 'Visibles', dot: 'bg-[#2f9e5b]' },
+  { value: 'inactivos', label: 'Ocultos', dot: 'bg-[#a3a29c]' },
 ]
+
+// Alto común de los controles de la barra
+const controlClass = 'h-[38px] rounded-[9px] border text-sm transition-colors'
 
 interface AdminProductFiltersProps {
   search: string
   categoryId: number | null
   status: StatusFilter
   categories: AdminCategoryNode[]
-  counts?: Record<StatusFilter, number> // Cuántos productos hay en cada pestaña
+  counts?: Record<StatusFilter, number> // Cuántos productos hay en cada filtro
   onSearchChange: (value: string) => void
   onCategoryChange: (id: number | null) => void
   onStatusChange: (status: StatusFilter) => void
@@ -56,46 +55,49 @@ function AdminProductFilters({
     timerRef.current = window.setTimeout(() => onSearchChange(value.trim()), SEARCH_DELAY_MS)
   }
 
+  const clearSearch = () => {
+    window.clearTimeout(timerRef.current)
+    setSearchInput('')
+    onSearchChange('')
+  }
+
   // Limpieza: si la página se cierra con una búsqueda pendiente, se cancela
   useEffect(() => () => window.clearTimeout(timerRef.current), [])
 
   const hasCategory = categoryId !== null
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      {/* En celular el buscador va primero y ocupa todo el ancho */}
-      <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
-        <AdminTabs
-          label="Estado de los productos"
-          tabs={statusTabs.map((tab) => ({ ...tab, count: counts?.[tab.value] }))}
-          value={status}
-          onChange={onStatusChange}
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
+      {/* Buscador: ocupa el espacio que sobre */}
+      <label
+        htmlFor={`${baseId}-search`}
+        className={`${controlClass} flex min-w-0 flex-[1_1_260px] items-center gap-2 border-[#e2e1dc] bg-white px-3 text-[#8b8a84] focus-within:border-admin-accent focus-within:ring-4 focus-within:ring-admin-accent/10`}
+      >
+        <Search size={16} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
+        <span className="sr-only">Buscar productos</span>
+        <input
+          id={`${baseId}-search`}
+          type="search"
+          value={searchInput}
+          onChange={(e) => handleSearchInput(e.target.value)}
+          placeholder="Buscar por nombre"
+          className="min-w-0 flex-1 border-0 bg-transparent text-sm text-admin-ink placeholder:text-[#8b8a84] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
-      </div>
+        {searchInput !== '' && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            aria-label="Borrar búsqueda"
+            className="-mr-1 flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-admin-hover hover:text-admin-ink"
+          >
+            <X size={14} strokeWidth={2} aria-hidden="true" />
+          </button>
+        )}
+      </label>
 
-      <div className="order-1 flex flex-col gap-2 sm:flex-row sm:items-center lg:order-2">
-        <div className="relative w-full sm:flex-1 lg:w-72 lg:flex-none">
-          <label htmlFor={`${baseId}-search`} className="sr-only">
-            Buscar productos
-          </label>
-          <Search
-            size={16}
-            strokeWidth={1.75}
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-          />
-          <input
-            id={`${baseId}-search`}
-            type="search"
-            value={searchInput}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder="Buscar por nombre"
-            className={`${fieldClass} pl-9`}
-          />
-        </div>
-
-        {/* Categoría: cuando hay una elegida, el campo se resalta y muestra su propia "×" */}
-        <div className="relative w-full sm:w-56">
+      <div className="flex max-w-full gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+        {/* Categoría: cuando hay una elegida, se pinta como filtro activo y muestra su "×" */}
+        <div className="relative shrink-0">
           <label htmlFor={`${baseId}-category`} className="sr-only">
             Categoría
           </label>
@@ -103,10 +105,10 @@ function AdminProductFilters({
             id={`${baseId}-category`}
             value={categoryId ?? ''}
             onChange={(e) => onCategoryChange(e.target.value === '' ? null : Number(e.target.value))}
-            className={`${fieldClass} cursor-pointer appearance-none truncate ${
+            className={`${controlClass} max-w-56 cursor-pointer appearance-none truncate pl-3 text-[13px] font-medium focus:outline-none focus-visible:ring-4 focus-visible:ring-admin-accent/10 ${
               hasCategory
-                ? 'border-admin-accent/40 bg-admin-accent/5 pr-16 font-medium text-admin-accent'
-                : 'pr-9'
+                ? 'border-admin-ink bg-admin-ink pr-14 text-white'
+                : 'border-[#e2e1dc] bg-white pr-8 text-[#3d3c38] hover:border-[#cbcac4]'
             }`}
           >
             <option value="">Todas las categorías</option>
@@ -127,19 +129,47 @@ function AdminProductFilters({
               onClick={() => onCategoryChange(null)}
               aria-label="Quitar filtro de categoría"
               title="Quitar filtro"
-              className="absolute right-8 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-admin-accent transition-colors hover:bg-admin-accent/10"
+              className="absolute right-7 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-white/80 hover:bg-white/15 hover:text-white"
             >
-              <X size={14} strokeWidth={2} aria-hidden="true" />
+              <X size={13} strokeWidth={2} aria-hidden="true" />
             </button>
           )}
           <ChevronDown
-            size={16}
-            strokeWidth={1.75}
+            size={14}
+            strokeWidth={2}
             aria-hidden="true"
-            className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${
-              hasCategory ? 'text-admin-accent' : 'text-ink-muted'
+            className={`pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 ${
+              hasCategory ? 'text-white/80' : 'text-[#8b8a84]'
             }`}
           />
+        </div>
+
+        {/* Estado: pastillas con contador */}
+        <div role="radiogroup" aria-label="Estado de los productos" className="flex gap-1.5">
+          {statusFilters.map(({ value, label, dot }) => {
+            const isActive = value === status
+            const count = counts?.[value]
+            return (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                onClick={() => onStatusChange(value)}
+                className={`${controlClass} flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-[13px] font-medium ${
+                  isActive
+                    ? 'border-admin-ink bg-admin-ink text-white'
+                    : 'border-[#e2e1dc] bg-white text-[#3d3c38] hover:border-[#cbcac4]'
+                }`}
+              >
+                {dot && <span aria-hidden="true" className={`size-[7px] rounded-full ${dot}`} />}
+                {label}
+                {count !== undefined && (
+                  <span className={`tabular-nums ${isActive ? 'text-[#c9c8c2]' : 'text-[#9a9993]'}`}>{count}</span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>

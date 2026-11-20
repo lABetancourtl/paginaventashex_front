@@ -10,7 +10,7 @@ const PHRASES = [
   'Si bajas más, te sale una aleta.',
 ]
 
-const CLOSE_MS = 620 // Lo que dura la animación de recogerse (ver .deep-sea.is-closing en index.css)
+const CLOSE_MS = 1150 // Lo que dura el cierre tipo telón (ver .deep-sea.is-closing en index.css)
 const REOPEN_PX = 60 // Al subir esta distancia desde el final, se prepara de nuevo
 const BOTTOM_TOLERANCE_PX = 4 // Margen para "llegó al final" (el scroll a veces frena a 1-2 px)
 const SCROLL_IDLE_MS = 120 // Sin eventos de scroll por este tiempo = el scroll se detuvo
@@ -75,8 +75,25 @@ function FooterDeepSea() {
 
     const close = () => {
       closing = true
-      section.style.height = `${section.offsetHeight}px` // Fija la altura actual...
+      const height = section.offsetHeight
+      section.style.height = `${height}px` // Fija la altura actual...
+      section.style.setProperty('--deep-sea-h', `${height}px`) // Para que los rayos no se aplasten
       void section.offsetHeight // ...y la aplica antes de animar
+      // El contenido no cambia de lugar al empezar: solo se desliza, con la misma curva y
+      // duración que el telón. Avanza en proporción a lo que baja la altura, de modo que,
+      // cuando lo visible mide lo mismo que el contenido, queda completo y centrado
+      const inner = section.querySelector<HTMLElement>('.deep-sea-inner')
+      const svg = inner?.querySelector('svg')
+      const message = inner?.querySelector('.deep-sea-message')
+      if (inner && svg && message) {
+        const sectionTop = section.getBoundingClientRect().top
+        const contentTop = svg.getBoundingClientRect().top - sectionTop
+        const contentHeight = message.getBoundingClientRect().bottom - sectionTop - contentTop
+        const free = height - contentHeight
+        const ratio = free > 0 ? Math.min(Math.max(contentTop / free, 0), 1) : 0.5
+        inner.style.transition = `transform ${CLOSE_MS - 50}ms cubic-bezier(.6, 0, .25, 1)`
+        inner.style.transform = `translateY(${-ratio * height}px)`
+      }
       section.classList.add('is-closing')
       section.style.height = '0px' // Se recoge: la página baja hasta dejar el footer al final
 
@@ -84,6 +101,11 @@ function FooterDeepSea() {
         section.classList.add('is-gone')
         section.classList.remove('is-closing', 'is-seen')
         section.style.height = ''
+        section.style.removeProperty('--deep-sea-h')
+        if (inner) {
+          inner.style.transition = ''
+          inner.style.transform = ''
+        }
         closing = false
       }, CLOSE_MS)
     }

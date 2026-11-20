@@ -6,15 +6,12 @@ import {
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
-  Eye,
-  EyeOff,
+  CloudOff,
   Folder,
   FolderOpen,
   FolderPlus,
   FolderTree,
-  LayoutGrid,
   Layers,
-  Pencil,
   Plus,
   Search,
   ToggleRight,
@@ -32,19 +29,16 @@ import type { AdminCategoryNode } from '../../features/catalog/types'
 import AdminPageHeader from '../components/AdminPageHeader'
 import AdminCard from '../components/AdminCard'
 import AdminConfirmDialog from '../components/AdminConfirmDialog'
-import AdminActionMenu from '../components/AdminActionMenu'
-import type { ActionMenuItem } from '../components/AdminActionMenu'
 import AdminSwitch from '../components/AdminSwitch'
-import AdminTabs from '../components/AdminTabs'
 import { useAdminToast } from '../toast/toastContext'
 import CategoryFormDialog from '../components/CategoryFormDialog'
 import type { CategoryDialogState, CategoryFormValues } from '../components/CategoryFormDialog'
 import StoreNavPreview from '../components/StoreNavPreview'
 import {
-  adminIconButtonClass,
-  adminInputClass,
-  adminPrimaryButtonClass,
-  adminSecondaryButtonClass,
+  adminGhostButtonClass,
+  adminOutlineButtonClass,
+  adminPanelClass,
+  adminSolidButtonClass,
 } from '../adminStyles'
 import { normalizeText } from '../../utils/text'
 
@@ -78,20 +72,32 @@ function Highlight({ text, query }: { text: string; query: string }) {
 }
 
 // Columnas compartidas por el encabezado y las filas (solo computador)
-const gridCols = 'md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,200px)_110px_130px_80px_48px] md:items-center'
+const gridCols =
+  'md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,180px)_104px_120px_72px_120px] md:items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,200px)_110px_130px_72px_220px]'
 
-const colHeadClass = 'py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted whitespace-nowrap'
+const colHeadClass = 'py-2.5 text-xs font-medium text-[#8b8a84] whitespace-nowrap'
+
+// Botón cuadrado de 32px (subir y bajar)
+const arrowButtonClass =
+  'inline-flex size-8 items-center justify-center rounded-lg text-[#3d3c38] transition-colors hover:bg-admin-hover disabled:cursor-not-allowed disabled:text-[#cfcec8] disabled:hover:bg-transparent'
+
+// Pastillas de filtro (las mismas de la lista de productos)
+const statusFilters: { value: StatusFilter; label: string; dot?: string }[] = [
+  { value: 'todas', label: 'Todas' },
+  { value: 'activas', label: 'Activas', dot: 'bg-[#2f9e5b]' },
+  { value: 'inactivas', label: 'Inactivas', dot: 'bg-[#a3a29c]' },
+]
 
 // ─── Tarjeta de resumen ─────────────────────────────────────
 function StatTile({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: ReactNode }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-admin-line bg-white px-4 py-3.5 shadow-[0_1px_2px_rgb(16_24_40/0.04)]">
-      <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-xl bg-admin-bg text-ink-muted">
+    <div className={`${adminPanelClass} flex items-center gap-3 px-[18px] py-4`}>
+      <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-[10px] bg-admin-hover text-[#4a4945]">
         <Icon size={18} strokeWidth={1.75} />
       </span>
       <div>
-        <p className="text-xs text-ink-muted">{label}</p>
-        <p className="text-lg font-semibold tabular-nums leading-tight">{value}</p>
+        <p className="text-[13px] text-[#6b6a65]">{label}</p>
+        <p className="text-xl font-semibold tracking-tight tabular-nums leading-tight">{value}</p>
       </div>
     </div>
   )
@@ -141,15 +147,15 @@ function CategoryRow({
   const isVisible = category.isActive && !hiddenByParent
   const FolderIcon = isExpanded ? FolderOpen : Folder
 
-  // Activar y desactivar se hace con el interruptor de la columna Estado
-  const actions: ActionMenuItem[] = [
-    { label: 'Editar', icon: Pencil, onClick: onEdit },
-    ...(onAddChild ? [{ label: 'Agregar subcategoría', icon: FolderPlus, onClick: onAddChild }] : []),
-  ]
-
   // Clic en la fila de una principal: despliega o recoge sus subcategorías
   // (salvo si el clic fue en un botón, como el interruptor o el menú ⋮)
   const canExpand = onToggleExpand !== undefined && childCount > 0
+  // Un segundo clic seguido en el mismo punto es un doble clic: el navegador seleccionaría la
+  // palabra y el clic se ignoraría como "seleccionando texto". Se evita esa selección.
+  const handleRowMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (canExpand && e.detail > 1) e.preventDefault()
+  }
+
   const handleRowClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!canExpand) return
     if ((e.target as HTMLElement).closest('a, button, input, [role="menu"]')) return
@@ -163,6 +169,7 @@ function CategoryRow({
     <div className="flex items-center gap-2">
       <AdminSwitch
         size="sm"
+        tone="ink"
         checked={category.isActive}
         disabled={isUpdating}
         label={category.isActive ? `Desactivar ${category.name}` : `Activar ${category.name}`}
@@ -170,7 +177,7 @@ function CategoryRow({
       />
       <span
         className={`text-xs font-medium ${
-          !category.isActive ? 'text-ink-muted' : hiddenByParent ? 'text-amber-700' : 'text-green-700'
+          !category.isActive ? 'text-[#8b8a84]' : hiddenByParent ? 'text-[#8a5a00]' : 'text-[#1f7a45]'
         }`}
       >
         {statusText}
@@ -178,15 +185,17 @@ function CategoryRow({
     </div>
   )
 
+  // Al filtrar no se puede reordenar: el aviso aparece al pasar el mouse sobre las flechas
+  const reorderHint = canReorder ? undefined : 'El orden no se puede cambiar mientras filtras.'
   const reorderButtons = (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-0.5" title={reorderHint}>
       <button
         type="button"
         onClick={onMoveUp}
         disabled={!canReorder || isFirst || isReordering}
         aria-label={`Subir ${category.name}`}
-        title="Subir"
-        className={`${adminIconButtonClass} size-7`}
+        title={reorderHint ?? 'Subir'}
+        className={arrowButtonClass}
       >
         <ArrowUp size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -195,8 +204,8 @@ function CategoryRow({
         onClick={onMoveDown}
         disabled={!canReorder || isLast || isReordering}
         aria-label={`Bajar ${category.name}`}
-        title="Bajar"
-        className={`${adminIconButtonClass} size-7`}
+        title={reorderHint ?? 'Bajar'}
+        className={arrowButtonClass}
       >
         <ArrowDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -206,18 +215,19 @@ function CategoryRow({
   return (
     <div
       onClick={handleRowClick}
-      className={`group relative flex items-start gap-3 px-4 py-3 transition-colors hover:bg-admin-bg/50 md:gap-0 md:px-5 ${gridCols} ${
-        isChild ? 'bg-admin-bg/30' : ''
+      onMouseDown={handleRowMouseDown}
+      className={`group relative flex items-start gap-3 px-4 py-2.5 transition-colors md:gap-0 md:px-5 ${gridCols} ${
+        isChild ? 'bg-[#fcfcfb] hover:bg-[#f8f8f6]' : 'hover:bg-[#fbfbfa]'
       } ${canExpand ? 'cursor-pointer' : ''}`}
     >
       {/* Nombre: con flecha, carpeta o conector de árbol */}
-      <div className={`flex min-w-0 flex-1 items-center gap-3 ${isVisible ? '' : 'opacity-60'}`}>
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         {isChild ? (
           <span aria-hidden="true" className="relative ml-[59px] flex h-10 w-6 shrink-0">
             {/* Línea vertical y codo del árbol */}
-            <span className={`absolute left-0 top-[-12px] w-px bg-admin-line ${isLastChild ? 'h-[32px]' : 'bottom-[-12px]'}`} />
-            <span className="absolute left-0 top-1/2 h-px w-4 bg-admin-line" />
-            <span className="absolute left-4 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-ink-muted/40" />
+            <span className={`absolute left-0 top-[-10px] w-px bg-[#e7e6e2] ${isLastChild ? 'h-[30px]' : 'bottom-[-10px]'}`} />
+            <span className="absolute left-0 top-1/2 h-px w-4 bg-[#e7e6e2]" />
+            <span className="absolute left-4 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-[#cfcec8]" />
           </span>
         ) : (
           <>
@@ -227,7 +237,7 @@ function CategoryRow({
                 onClick={onToggleExpand}
                 aria-expanded={isExpanded}
                 aria-label={`${isExpanded ? 'Ocultar' : 'Mostrar'} subcategorías de ${category.name}`}
-                className={`${adminIconButtonClass} size-7 shrink-0`}
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-[#6b6a65] transition-colors hover:bg-admin-active"
               >
                 <ChevronRight
                   size={16}
@@ -241,8 +251,8 @@ function CategoryRow({
             )}
             <span
               aria-hidden="true"
-              className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
-                isVisible ? 'bg-admin-accent/10 text-admin-accent' : 'bg-admin-bg text-ink-muted'
+              className={`flex size-9 shrink-0 items-center justify-center rounded-[10px] ${
+                isVisible ? 'bg-admin-hover text-[#4a4945]' : 'bg-admin-bg text-[#a3a29c]'
               }`}
             >
               <FolderIcon size={18} strokeWidth={1.75} />
@@ -251,34 +261,52 @@ function CategoryRow({
         )}
 
         <div className="min-w-0">
-          <p className={`break-words text-sm md:truncate ${isChild ? 'text-ink' : 'font-semibold text-ink'}`}>
+          <p
+            className={`break-words text-sm md:truncate ${isChild ? 'font-medium' : 'font-semibold'} ${
+              isVisible ? 'text-admin-ink' : 'text-[#8b8a84]'
+            }`}
+          >
             <Highlight text={category.name} query={query} />
           </p>
           {/* En celular, el slug y el estado van bajo el nombre */}
           <div className="mt-1 flex flex-wrap items-center gap-2 md:hidden">
-            <span className="break-all font-mono text-[11px] text-ink-muted">/{category.slug}</span>
+            <span className="break-all font-mono text-[11px] text-[#9a9993]">/{category.slug}</span>
             {status}
           </div>
           {hiddenByParent && (
-            <p className="mt-0.5 text-xs text-amber-700">Oculta porque su categoría principal está desactivada.</p>
+            <p className="mt-0.5 text-xs font-medium text-[#8a5a00]">Oculta porque su categoría principal está desactivada.</p>
           )}
         </div>
       </div>
 
       {/* Columnas de computador */}
       <div className="hidden min-w-0 pr-4 md:block">
-        <span className="block truncate rounded-md font-mono text-xs text-ink-muted">/{category.slug}</span>
+        <span className="block truncate font-mono text-xs text-[#6b6a65]">/{category.slug}</span>
       </div>
-      <div className="hidden text-sm tabular-nums text-ink-muted md:block">
+      <div className="hidden text-[13px] tabular-nums text-[#6b6a65] md:block">
         {isChild ? '—' : childCount}
       </div>
       <div className="hidden md:block">{status}</div>
       <div className="hidden md:block">{reorderButtons}</div>
 
       {/* Acciones */}
-      <div className="flex shrink-0 items-center gap-1 md:justify-end">
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
         <div className="md:hidden">{reorderButtons}</div>
-        <AdminActionMenu label={`Acciones de ${category.name}`} items={actions} />
+        {onAddChild && (
+          <button
+            type="button"
+            onClick={onAddChild}
+            aria-label={`Agregar subcategoría a ${category.name}`}
+            title="Agregar subcategoría"
+            className={`${adminGhostButtonClass} px-2.5 lg:px-3`}
+          >
+            <FolderPlus size={15} strokeWidth={1.75} aria-hidden="true" className="lg:hidden" />
+            <span className="hidden lg:inline">+ Subcategoría</span>
+          </button>
+        )}
+        <button type="button" onClick={onEdit} aria-label={`Editar ${category.name}`} className={adminOutlineButtonClass}>
+          Editar
+        </button>
       </div>
     </div>
   )
@@ -287,13 +315,13 @@ function CategoryRow({
 // ─── Filas de carga ─────────────────────────────────────────
 function TreeSkeleton() {
   return (
-    <ul aria-label="Cargando categorías" className="divide-y divide-admin-line">
+    <ul aria-label="Cargando categorías">
       {Array.from({ length: 5 }, (_, index) => (
-        <li key={index} className="flex animate-pulse items-center gap-3 px-5 py-4">
-          <div className="size-7 rounded-lg bg-admin-bg" />
-          <div className="size-10 rounded-xl bg-admin-bg" />
-          <div className="h-3 w-40 rounded-full bg-admin-bg" />
-          <div className="ml-auto hidden h-5 w-16 rounded-full bg-admin-bg md:block" />
+        <li key={index} className="flex animate-pulse items-center gap-3 border-t border-admin-row-line px-5 py-3.5 first:border-t-0">
+          <div className="size-7 rounded-md bg-admin-active" />
+          <div className="size-9 rounded-[10px] bg-admin-active" />
+          <div className="h-3 w-40 rounded-md bg-admin-active" />
+          <div className="ml-auto h-[34px] w-[90px] rounded-lg bg-[#f3f2ee]" />
         </li>
       ))}
     </ul>
@@ -466,7 +494,7 @@ function AdminCategoriesPage() {
       const isExpanded = isSearching || expanded.has(category.id)
 
       return (
-        <li key={category.id} className={isRoot ? 'border-b border-admin-line last:border-b-0' : ''}>
+        <li key={category.id} className={isRoot ? 'border-t border-admin-row-line' : ''}>
           <CategoryRow
             category={category}
             isChild={!isRoot}
@@ -488,7 +516,7 @@ function AdminCategoriesPage() {
           />
 
           {isRoot && isExpanded && category.children.length > 0 && (
-            <ul className="border-t border-dashed border-admin-line">{renderRows(category.children, category)}</ul>
+            <ul className="border-t border-[#f6f5f2]">{renderRows(category.children, category)}</ul>
           )}
         </li>
       )
@@ -507,27 +535,31 @@ function AdminCategoriesPage() {
     content = <TreeSkeleton />
   } else if (error) {
     content = (
-      <p role="alert" className="px-5 py-10 text-center text-sm text-danger">
-        {error.message}
-      </p>
+      <div role="alert" className="flex flex-col items-center gap-2 px-6 py-14 text-center">
+        <span className="flex size-11 items-center justify-center rounded-full bg-[#fdecea] text-[#b42318]">
+          <CloudOff size={20} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <p className="mt-1 text-[15px] font-semibold">No pudimos cargar las categorías</p>
+        <p className="max-w-[340px] text-sm text-[#6b6a65]">{error.message}</p>
+      </div>
     )
   } else if (tree.length === 0) {
     content = (
-      <div className="flex flex-col items-center px-5 py-14 text-center">
-        <span className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-admin-bg text-ink-muted">
-          <FolderTree size={22} strokeWidth={1.5} aria-hidden="true" />
+      <div className="flex flex-col items-center gap-2 px-6 pb-[68px] pt-16 text-center">
+        <span className="flex size-[52px] items-center justify-center rounded-[14px] bg-admin-hover text-[#4a4945]">
+          <FolderTree size={24} strokeWidth={1.5} aria-hidden="true" />
         </span>
-        <p className="text-sm font-medium">Todavía no hay categorías</p>
-        <p className="mt-1 text-sm text-ink-muted">Crea la primera para organizar tu catálogo.</p>
-        <button type="button" onClick={() => openCreate(null)} className={`${adminPrimaryButtonClass} mt-5`}>
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
+        <p className="mt-1.5 text-base font-semibold">Todavía no hay categorías</p>
+        <p className="max-w-[380px] text-sm text-[#6b6a65]">Crea la primera para organizar tu catálogo.</p>
+        <button type="button" onClick={() => openCreate(null)} className={`${adminSolidButtonClass} mt-2.5`}>
+          <Plus size={14} strokeWidth={2} aria-hidden="true" />
           Nueva categoría
         </button>
       </div>
     )
   } else if (visibleTree.length === 0) {
     content = (
-      <p className="px-5 py-12 text-center text-sm text-ink-muted">
+      <p className="px-5 py-12 text-center text-sm text-[#6b6a65]">
         {normalizedQuery
           ? `Ninguna categoría coincide con “${query.trim()}”.`
           : statusFilter === 'inactivas'
@@ -539,15 +571,20 @@ function AdminCategoriesPage() {
     content = (
       <>
         {/* Encabezado de columnas */}
-        <div className={`hidden border-b border-admin-line px-5 ${gridCols}`}>
-          <span className={`${colHeadClass} pl-[92px]`}>Categoría</span>
+        <div className={`hidden px-5 ${gridCols}`}>
+          <span className={`${colHeadClass} pl-[88px]`}>Categoría</span>
           <span className={colHeadClass}>Slug</span>
           <span className={colHeadClass}>Subcategorías</span>
           <span className={colHeadClass}>Estado</span>
           <span className={colHeadClass}>Orden</span>
-          <span className={`${colHeadClass} text-right`}>Acción</span>
+          <span className={colHeadClass}>
+            <span className="sr-only">Acciones</span>
+          </span>
         </div>
         <ul>{renderRows(visibleTree, null)}</ul>
+        <p className="border-t border-admin-row-line px-5 py-3 text-[13px] text-[#8b8a84]">
+          El orden de esta lista es el orden del menú en tu tienda.
+        </p>
       </>
     )
   }
@@ -566,8 +603,7 @@ function AdminCategoriesPage() {
         title="Categorías"
         description="Organiza las categorías y subcategorías que ven los clientes en el menú."
         actions={
-          // Secundario a propósito: crear no es la tarea principal de esta página
-          <button type="button" onClick={() => openCreate(null)} className={adminSecondaryButtonClass}>
+          <button type="button" onClick={() => openCreate(null)} className={`${adminSolidButtonClass} pl-3.5`}>
             <Plus size={16} strokeWidth={2} aria-hidden="true" />
             Nueva categoría
           </button>
@@ -584,7 +620,7 @@ function AdminCategoriesPage() {
             value={
               <>
                 {activeCount}
-                <span className="text-sm font-normal text-ink-muted"> de {rootCount + childCount}</span>
+                <span className="text-sm font-normal text-[#8b8a84]"> de {rootCount + childCount}</span>
               </>
             }
           />
@@ -601,61 +637,63 @@ function AdminCategoriesPage() {
         </AdminCard>
       )}
 
-      <AdminCard flush>
-        {tree && tree.length > 0 && (
-          <div className="flex flex-col gap-3 border-b border-admin-line px-4 py-4 lg:flex-row lg:items-center lg:justify-between sm:px-5">
-            <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
-              <AdminTabs
-                label="Estado de las categorías"
-                tabs={[
-                  { value: 'todas', label: 'Todas', icon: LayoutGrid, count: rootCount + childCount },
-                  { value: 'activas', label: 'Activas', icon: Eye, count: activeCount },
-                  { value: 'inactivas', label: 'Inactivas', icon: EyeOff, count: inactiveCount },
-                ]}
-                value={statusFilter}
-                onChange={setStatusFilter}
-              />
-            </div>
-            <div className="order-1 flex flex-col gap-2 sm:flex-row sm:items-center lg:order-2">
-            <div className="relative w-full sm:flex-1 lg:w-72 lg:flex-none">
-              <label htmlFor="category-search" className="sr-only">
-                Buscar categorías
-              </label>
-              <Search
-                size={16}
-                strokeWidth={1.75}
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-              />
-              <input
-                id="category-search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar por nombre o slug"
-                className={`${adminInputClass} h-10 py-0 pl-9`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              {isSearching && (
-                <span className="text-xs text-ink-muted">El orden no se puede cambiar mientras filtras.</span>
-              )}
-              {!isSearching && (
-                <button type="button" onClick={toggleAll} className={adminSecondaryButtonClass}>
-                  {allExpanded ? (
-                    <ChevronsDownUp size={15} strokeWidth={1.75} aria-hidden="true" />
-                  ) : (
-                    <ChevronsUpDown size={15} strokeWidth={1.75} aria-hidden="true" />
-                  )}
-                  {allExpanded ? 'Contraer todas' : 'Expandir todas'}
+      {tree && tree.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2.5">
+          <label
+            htmlFor="category-search"
+            className="flex h-[38px] min-w-0 flex-[1_1_260px] items-center gap-2 rounded-[9px] border border-[#e2e1dc] bg-white px-3 text-[#8b8a84] transition-colors focus-within:border-admin-accent focus-within:ring-4 focus-within:ring-admin-accent/10"
+          >
+            <Search size={16} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
+            <span className="sr-only">Buscar categorías</span>
+            <input
+              id="category-search"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nombre o slug"
+              className="min-w-0 flex-1 border-0 bg-transparent text-sm text-admin-ink placeholder:text-[#8b8a84] focus:outline-none"
+            />
+          </label>
+
+          <div role="radiogroup" aria-label="Estado de las categorías" className="flex max-w-full gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+            {statusFilters.map(({ value, label, dot }) => {
+              const isActive = value === statusFilter
+              const count = value === 'todas' ? rootCount + childCount : value === 'activas' ? activeCount : inactiveCount
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isActive}
+                  onClick={() => setStatusFilter(value)}
+                  className={`flex h-[38px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[9px] border px-3 text-[13px] font-medium transition-colors ${
+                    isActive
+                      ? 'border-admin-ink bg-admin-ink text-white'
+                      : 'border-[#e2e1dc] bg-white text-[#3d3c38] hover:border-[#cbcac4]'
+                  }`}
+                >
+                  {dot && <span aria-hidden="true" className={`size-[7px] rounded-full ${dot}`} />}
+                  {label}
+                  <span className={`tabular-nums ${isActive ? 'text-[#c9c8c2]' : 'text-[#9a9993]'}`}>{count}</span>
                 </button>
-              )}
-            </div>
-            </div>
+              )
+            })}
           </div>
-        )}
-        {content}
-      </AdminCard>
+
+          {!isSearching && (
+            <button type="button" onClick={toggleAll} className={adminGhostButtonClass}>
+              {allExpanded ? (
+                <ChevronsDownUp size={15} strokeWidth={1.75} aria-hidden="true" />
+              ) : (
+                <ChevronsUpDown size={15} strokeWidth={1.75} aria-hidden="true" />
+              )}
+              {allExpanded ? 'Contraer todas' : 'Expandir todas'}
+            </button>
+          )}
+        </div>
+      )}
+
+      <section className={`${adminPanelClass} overflow-hidden max-md:[&>ul>li:first-child]:border-t-0`}>{content}</section>
 
 
 

@@ -6,11 +6,19 @@ import { adminIconButtonClass } from '../adminStyles'
 
 type DialogSize = 'sm' | 'md' | 'lg'
 type IconTone = 'accent' | 'danger' | 'warning'
+type DialogLook = 'default' | 'neutral' // neutral: estilo Tisoro (grises cálidos, sin sombras de color)
 
 const sizeClasses: Record<DialogSize, string> = {
   sm: 'sm:max-w-md',
   md: 'sm:max-w-lg',
   lg: 'sm:max-w-2xl',
+}
+
+// Recuadro del ícono en el estilo neutral, según el tono
+const neutralIconClasses: Record<IconTone, string> = {
+  accent: 'bg-admin-hover text-[#3d3c38]',
+  danger: 'bg-[#fdecea] text-[#b42318]',
+  warning: 'bg-[#fdf3dc] text-[#8a5a00]',
 }
 
 const iconToneClasses: Record<IconTone, string> = {
@@ -27,6 +35,7 @@ interface AdminDialogProps {
   icon?: LucideIcon
   iconTone?: IconTone
   size?: DialogSize
+  look?: DialogLook
   children: ReactNode
 }
 
@@ -39,30 +48,48 @@ function AdminDialog({
   icon: Icon,
   iconTone = 'accent',
   size = 'md',
+  look = 'default',
   children,
 }: AdminDialogProps) {
+  const isNeutral = look === 'neutral'
+
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
-      <div aria-hidden="true" className="fixed inset-0 animate-admin-fade bg-[#0f172a]/40 backdrop-blur-[2px]" />
+      <div
+        aria-hidden="true"
+        className={`fixed inset-0 animate-admin-fade motion-reduce:animate-none ${isNeutral ? 'bg-[#1c1c1a]/40' : 'bg-[#0f172a]/40'}`}
+      />
 
       <div className="fixed inset-0 flex items-end justify-center sm:items-center sm:p-6">
         <DialogPanel
-          className={`flex max-h-[92dvh] w-full animate-admin-pop flex-col overflow-hidden rounded-t-2xl bg-white text-ink shadow-2xl sm:rounded-2xl ${sizeClasses[size]}`}
+          className={`flex max-h-[92dvh] w-full animate-admin-pop flex-col will-change-transform motion-reduce:animate-none overflow-hidden bg-white ${
+            isNeutral
+              ? 'rounded-t-[14px] text-admin-ink shadow-[0_24px_64px_rgb(28_28_26/0.22)] sm:rounded-[14px]'
+              : 'rounded-t-2xl text-ink shadow-2xl sm:rounded-2xl'
+          } ${sizeClasses[size]}`}
         >
           {/* Encabezado */}
-          <div className="flex shrink-0 items-start gap-3 border-b border-admin-line px-5 py-4 sm:px-6">
+          <div
+            className={`flex shrink-0 items-start gap-3 border-b px-5 py-4 sm:px-6 ${
+              isNeutral ? 'border-admin-row-line' : 'border-admin-line'
+            }`}
+          >
             {Icon && (
               <span
                 aria-hidden="true"
-                className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-4 ${iconToneClasses[iconTone]}`}
+                className={
+                  isNeutral
+                    ? `flex size-9 shrink-0 items-center justify-center rounded-[10px] ${neutralIconClasses[iconTone]}`
+                    : `flex size-10 shrink-0 items-center justify-center rounded-xl ring-4 ${iconToneClasses[iconTone]}`
+                }
               >
                 <Icon size={18} strokeWidth={1.75} />
               </span>
             )}
             <div className="min-w-0 flex-1 pt-0.5">
-              <DialogTitle className="text-base font-semibold leading-snug">{title}</DialogTitle>
+              <DialogTitle className={`font-semibold leading-snug ${isNeutral ? 'text-[15px]' : 'text-base'}`}>{title}</DialogTitle>
               {description && (
-                <Description as="div" className="mt-0.5 text-[13px] text-ink-muted">
+                <Description as="div" className={`mt-0.5 text-[13px] ${isNeutral ? 'text-[#6b6a65]' : 'text-ink-muted'}`}>
                   {description}
                 </Description>
               )}
@@ -86,9 +113,21 @@ export function AdminDialogBody({ children }: { children: ReactNode }) {
 }
 
 // Pie fijo con los botones
-export function AdminDialogFooter({ children, start }: { children: ReactNode; start?: ReactNode }) {
+export function AdminDialogFooter({
+  children,
+  start,
+  look = 'default',
+}: {
+  children: ReactNode
+  start?: ReactNode
+  look?: DialogLook
+}) {
   return (
-    <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-admin-line bg-admin-bg/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+    <div
+      className={`flex shrink-0 flex-col-reverse gap-2 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6 ${
+        look === 'neutral' ? 'border-admin-row-line bg-white' : 'border-admin-line bg-admin-bg/60'
+      }`}
+    >
       {start && <div className="text-xs text-ink-muted sm:mr-auto">{start}</div>}
       {children}
     </div>

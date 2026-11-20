@@ -8,7 +8,7 @@ import type { AttributeMode, VariantRules } from '../variantRules'
 import AdminDialog, { AdminDialogBody, AdminDialogFooter } from './AdminDialog'
 import AdminField, { AdminInputGroup } from './AdminField'
 import { ColorDot } from './ProductVariantsManager'
-import { adminInputClass, adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
+import { adminOutlineButtonClass, adminSolidButtonClass, adminTextFieldClass } from '../adminStyles'
 
 export type VariantDialogState = { mode: 'create' } | { mode: 'edit'; variant: AdminProductVariant }
 
@@ -24,7 +24,7 @@ interface ChipGroupProps {
 function ChipGroup({ legend, required = false, error, hint, children }: ChipGroupProps) {
   return (
     <fieldset>
-      <legend className="mb-1.5 text-[13px] font-medium text-ink">
+      <legend className="mb-1.5 text-[13px] font-medium text-admin-ink">
         {legend}
         {required && (
           <span aria-hidden="true" className="text-danger">
@@ -32,8 +32,8 @@ function ChipGroup({ legend, required = false, error, hint, children }: ChipGrou
           </span>
         )}
       </legend>
-      <div className="flex flex-wrap gap-2">{children}</div>
-      {hint && !error && <p className="mt-1.5 text-xs text-ink-muted">{hint}</p>}
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+      {hint && !error && <p className="mt-1.5 text-xs text-[#8b8a84]">{hint}</p>}
       {error && <p className="mt-1.5 text-xs font-medium text-danger">{error}</p>}
     </fieldset>
   )
@@ -50,10 +50,10 @@ interface ChipProps {
 function Chip({ name, checked, disabled = false, onChange, children }: ChipProps) {
   return (
     <label
-      className={`relative inline-flex cursor-pointer select-none items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-admin-accent ${
+      className={`relative inline-flex h-10 min-w-[52px] cursor-pointer select-none items-center justify-center gap-2 rounded-[9px] border px-3 text-[13px] font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-admin-accent ${
         checked
-          ? 'border-admin-accent bg-admin-accent/10 font-medium text-admin-accent'
-          : 'border-admin-line bg-white text-ink hover:border-ink/25'
+          ? 'border-admin-ink bg-admin-ink text-white'
+          : 'border-[#e2e1dc] bg-white text-[#3d3c38] hover:border-[#cbcac4]'
       } ${disabled ? 'pointer-events-none opacity-50' : ''}`}
     >
       <input
@@ -135,14 +135,14 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
       <AdminDialogBody>
         {/* Talla y color de solo lectura cuando el producto tiene varias variantes */}
         {current && !attributesEditable && (
-          <div className="rounded-xl border border-admin-line bg-admin-bg/60 p-3">
+          <div className="rounded-[10px] bg-admin-bg px-4 py-3">
             <div className="flex items-center gap-3">
               {current.colorId !== null && <ColorDot hex={current.colorHexCode} size="size-8" />}
               <div>
                 <p className="text-sm font-medium">
                   {current.sizeName ?? 'Sin talla'} · {current.colorName ?? 'Sin color'}
                 </p>
-                <p className="text-xs text-ink-muted">
+                <p className="text-xs text-[#6b6a65]">
                   Con varias variantes, la talla y el color no se cambian: desactiva esta y crea otra.
                 </p>
               </div>
@@ -182,7 +182,7 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
             {group !== '' && (
               <ChipGroup legend="Talla" required={sizeMode === 'required'} error={errors.size}>
                 {sizes.isPending ? (
-                  <p className="text-sm text-ink-muted">Cargando tallas…</p>
+                  <p className="text-sm text-[#8b8a84]">Cargando tallas…</p>
                 ) : sizes.data && sizes.data.length > 0 ? (
                   sizes.data.map((size) => (
                     <Chip
@@ -196,7 +196,7 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
                     </Chip>
                   ))
                 ) : (
-                  <p className="text-sm text-ink-muted">No hay tallas activas en este grupo.</p>
+                  <p className="text-sm text-[#8b8a84]">No hay tallas activas en este grupo.</p>
                 )}
               </ChipGroup>
             )}
@@ -211,7 +211,7 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
               </Chip>
             )}
             {colors.isPending ? (
-              <p className="text-sm text-ink-muted">Cargando colores…</p>
+              <p className="text-sm text-[#8b8a84]">Cargando colores…</p>
             ) : (
               colors.data?.map((color) => {
                 const checked = colorId === String(color.id)
@@ -243,7 +243,7 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <AdminField id={`${baseId}-sku`} label="SKU" required error={errors.sku}>
+          <AdminField look="neutral" id={`${baseId}-sku`} label="SKU" required error={errors.sku}>
             <input
               id={`${baseId}-sku`}
               value={sku}
@@ -253,11 +253,11 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
               disabled={isSaving}
               autoFocus={current !== null}
               aria-invalid={errors.sku ? true : undefined}
-              className={`${adminInputClass} font-mono`}
+              className={`${adminTextFieldClass} h-10 font-mono`}
             />
           </AdminField>
-          <AdminField id={`${baseId}-stock`} label="Unidades" required error={errors.stock}>
-            <AdminInputGroup suffix="und.">
+          <AdminField look="neutral" id={`${baseId}-stock`} label="Unidades" required error={errors.stock}>
+            <AdminInputGroup look="neutral" suffix="und.">
               <input
                 id={`${baseId}-stock`}
                 value={stock}
@@ -266,24 +266,24 @@ function VariantForm({ state, rules, isSaving, serverError, onSubmit, onCancel }
                 placeholder="0"
                 disabled={isSaving}
                 aria-invalid={errors.stock ? true : undefined}
-                className={`${adminInputClass} pr-12 tabular-nums`}
+                className={`${adminTextFieldClass} h-10 pr-12 tabular-nums`}
               />
             </AdminInputGroup>
           </AdminField>
         </div>
 
         {serverError && (
-          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
+          <p role="alert" className="rounded-[10px] border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-danger">
             {serverError}
           </p>
         )}
       </AdminDialogBody>
 
-      <AdminDialogFooter>
-        <button type="button" onClick={onCancel} disabled={isSaving} className={adminSecondaryButtonClass}>
+      <AdminDialogFooter look="neutral">
+        <button type="button" onClick={onCancel} disabled={isSaving} className={adminOutlineButtonClass}>
           Cancelar
         </button>
-        <button type="submit" disabled={isSaving} className={adminPrimaryButtonClass}>
+        <button type="submit" disabled={isSaving} className={adminSolidButtonClass}>
           {isSaving ? 'Guardando...' : current ? 'Guardar cambios' : 'Agregar variante'}
         </button>
       </AdminDialogFooter>
@@ -312,6 +312,7 @@ function VariantFormDialog({ state, rules, isSaving, serverError, onSubmit, onCl
       description={isEdit ? state.variant.sku : 'Una combinación de talla y color con su propio stock.'}
       icon={isEdit ? Pencil : Layers}
       size="lg"
+      look="neutral"
     >
       {state && (
         <VariantForm

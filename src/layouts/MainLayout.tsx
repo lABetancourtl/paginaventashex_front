@@ -54,10 +54,15 @@ function MainLayout() {
   const activeRootId = categories ? findCategoryContext(categories, slug)?.root.id : undefined
   
   return (
-    <div className="flex min-h-screen flex-col pt-14">
+    // La altura del header incluye la franja de la barra de estado del teléfono (ver el header)
+    <div className="flex min-h-screen flex-col pt-[calc(3.5rem+env(safe-area-inset-top))]">
       <header
         className={[
           'fixed inset-x-0 top-0 z-30 rounded-b-xl border-b border-white/10 text-white glass-dark',
+          // Chrome en Android dibuja la página de borde a borde (viewport-fit=cover): al esconder
+          // la barra de dirección, el header quedaría debajo de la barra de estado del teléfono.
+          // Este relleno lo baja justo lo necesario (en computador y otros navegadores vale 0)
+          'pt-[env(safe-area-inset-top)]',
           'transition-transform duration-500 motion-reduce:transition-none',
           // Solo con el foco del teclado: un clic con el mouse no lo mantiene visible
           'has-[:focus-visible]:translate-y-0 has-[:focus-visible]:delay-0',

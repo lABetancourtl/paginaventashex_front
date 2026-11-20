@@ -6,7 +6,7 @@ import type { AdminCategoryNode } from '../../features/catalog/types'
 import type { HomeItemAdmin, HomeSectionAdmin } from '../../features/home/types'
 import { isCategoryUsable, sectionDisplayName } from '../homeSections'
 import type { ShelfProduct } from '../homeSections'
-import { stripedTileClass } from './HomeBlockList'
+import { stripedTileClass } from '../adminStyles'
 
 // Contenido de cada bloque: undefined mientras carga
 export interface PreviewContent {
@@ -44,6 +44,8 @@ function BlockContent({
           // Con la categoría inactiva, la tienda conserva la imagen y quita el enlace
           categorySlug: isCategoryUsable(tree, item.categoryId) ? item.categorySlug : null,
           categoryName: item.categoryName,
+          // Como la tienda: la versión para celular solo cuenta con un único medio
+          mobileUrl: items.length === 1 ? item.mobileUrl : null,
         }))}
       />
     )
@@ -93,10 +95,8 @@ function HomeLivePreview({ sections, selectedId, content, tree, onSelect }: Home
   }, [selectedId])
 
   return (
-    <div className="mx-auto w-full max-w-[1100px]">
-      <p className="mb-3 text-xs text-ink-muted">Vista previa en vivo · clic en un bloque para editarlo</p>
-
-      <div className="overflow-hidden rounded-xl border border-admin-line bg-canvas font-sans text-ink">
+    <div className="w-full">
+      <div className="bg-canvas font-sans text-ink">
         <div className="flex h-11 items-center justify-center border-b border-admin-line text-[13px] font-bold uppercase tracking-[0.2em]">
           {SITE_NAME}
         </div>

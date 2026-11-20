@@ -28,6 +28,16 @@ export function toProductFormValues(product: Product): ProductFormValues {
   }
 }
 
+// Al editar, el descuento se guarda junto con la información (0 = sin descuento)
+export interface ProductEditValues {
+  form: ProductFormValues
+  discount: number
+}
+
+export function toProductEditValues(product: Product): ProductEditValues {
+  return { form: toProductFormValues(product), discount: product.discountPercent ?? 0 }
+}
+
 // ─── Formulario → API ────────────────────────────────────────
 export function toCreateProductRequest(values: ProductFormValues): CreateProductRequest {
   return {

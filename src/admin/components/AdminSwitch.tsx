@@ -3,11 +3,12 @@ interface AdminSwitchProps {
   disabled?: boolean
   label: string // Para lectores de pantalla (ej: "Desactivar producto")
   size?: 'sm' | 'md'
+  tone?: 'success' | 'ink' // Color cuando está encendido
   onChange: () => void
 }
 
 // Interruptor de encendido/apagado
-function AdminSwitch({ checked, disabled = false, label, size = 'md', onChange }: AdminSwitchProps) {
+function AdminSwitch({ checked, disabled = false, label, size = 'md', tone = 'success', onChange }: AdminSwitchProps) {
   const track = size === 'sm' ? 'h-5 w-9' : 'h-6 w-11'
   const knob = size === 'sm' ? 'size-4' : 'size-5'
   const on = size === 'sm' ? 'translate-x-[18px]' : 'translate-x-[22px]'
@@ -22,7 +23,7 @@ function AdminSwitch({ checked, disabled = false, label, size = 'md', onChange }
       disabled={disabled}
       onClick={onChange}
       className={`relative inline-flex ${track} shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-        checked ? 'bg-admin-success' : 'bg-ink/15 hover:bg-ink/25'
+        checked ? (tone === 'ink' ? 'bg-admin-ink' : 'bg-admin-success') : tone === 'ink' ? 'bg-[#d9d8d2] hover:bg-[#cbcac4]' : 'bg-ink/15 hover:bg-ink/25'
       }`}
     >
       <span

@@ -3,7 +3,7 @@ import { AlertTriangle } from 'lucide-react'
 import AdminDialog, { AdminDialogBody, AdminDialogFooter } from './AdminDialog'
 import type { HomeSectionAdmin } from '../../features/home/types'
 import { sectionPath } from '../homeSections'
-import { adminPrimaryButtonClass, adminSecondaryButtonClass } from '../adminStyles'
+import { adminGhostButtonClass, adminOutlineButtonClass, adminSolidButtonClass } from '../adminStyles'
 
 // Aviso antes de activar un bloque vacío (no es destructivo: botón principal)
 interface HomeActivateEmptyDialogProps {
@@ -32,28 +32,29 @@ function HomeActivateEmptyDialog({
       icon={AlertTriangle}
       iconTone="warning"
       size="sm"
+      look="neutral"
     >
       <AdminDialogBody>
-        <p className="text-sm text-ink-muted">
+        <p className="text-sm text-[#6b6a65]">
           {isBanner ? 'No tiene imágenes ni videos' : 'No tiene productos'}, así que la tienda no lo mostrará hasta
           que agregues contenido. ¿Activarlo de todas formas?
         </p>
         {error && (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">
             {error}
           </p>
         )}
       </AdminDialogBody>
-      <AdminDialogFooter>
+      <AdminDialogFooter look="neutral">
         {section && showContentLink && (
-          <Link to={sectionPath(section.id)} className={`${adminSecondaryButtonClass} sm:mr-auto`}>
+          <Link to={sectionPath(section.id)} className={`${adminGhostButtonClass} sm:mr-auto`}>
             Agregar contenido
           </Link>
         )}
-        <button type="button" onClick={onCancel} disabled={isLoading} autoFocus className={adminSecondaryButtonClass}>
+        <button type="button" onClick={onCancel} disabled={isLoading} autoFocus className={adminOutlineButtonClass}>
           Cancelar
         </button>
-        <button type="button" onClick={onConfirm} disabled={isLoading} className={adminPrimaryButtonClass}>
+        <button type="button" onClick={onConfirm} disabled={isLoading} className={adminSolidButtonClass}>
           {isLoading ? 'Activando...' : 'Activar'}
         </button>
       </AdminDialogFooter>

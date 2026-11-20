@@ -33,12 +33,12 @@ function CategorySubnav({ hidden = false }: CategorySubnavProps) {
     <nav
       aria-label={`Subcategorías de ${root.name}`}
       className={[
-        'sticky top-14 z-20 rounded-b-xl border-b border-line bg-canvas/95 backdrop-blur-md',
+        'sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 rounded-b-xl border-b border-line bg-canvas/95 backdrop-blur-md',
         'transition-transform duration-500 motion-reduce:transition-none',
         'has-[:focus-visible]:translate-y-0 has-[:focus-visible]:delay-0',
         // Esconder: sale primero · Mostrar: espera al header
         hidden
-          ? '-translate-y-[calc(100%+3.5rem)] delay-0 ease-header-hide'
+          ? '-translate-y-[calc(100%+3.5rem+env(safe-area-inset-top))] delay-0 ease-header-hide'
           : 'translate-y-0 delay-150 ease-header-show',
       ].join(' ')}
     >

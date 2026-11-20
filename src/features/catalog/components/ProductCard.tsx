@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import type { UIEvent } from 'react'
 import { Link } from 'react-router'
 import { ImageOff } from 'lucide-react'
 import { cloudinarySrcSet, cloudinaryUrl } from '../../../utils/cloudinary'
@@ -39,6 +41,16 @@ interface ProductCardProps {
 
 function ProductCard({ product }: ProductCardProps) {
   const { catalogMainUrl: mainUrl, catalogHoverUrl: hoverUrl } = product
+  const hasTwoPhotos = Boolean(mainUrl && hoverUrl)
+  const thumbRef = useRef<HTMLSpanElement>(null)
+
+  // Celular: la barra sigue al deslizar entre las dos fotos (sin re-render, directo al estilo)
+  const handlePhotosScroll = (e: UIEvent<HTMLDivElement>) => {
+    const track = e.currentTarget
+    const max = track.scrollWidth - track.clientWidth
+    const progress = max > 0 ? track.scrollLeft / max : 0
+    if (thumbRef.current) thumbRef.current.style.transform = `translateX(${progress * 100}%)`
+  }
 
   return (
     <article className="group">
@@ -46,7 +58,10 @@ function ProductCard({ product }: ProductCardProps) {
         {/* Cuadrado, como las fotos: sin espacio sobrante arriba ni abajo */}
         <div className="relative aspect-square overflow-hidden rounded-xl">
           {mainUrl && hoverUrl ? (
-            <div className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:block md:overflow-hidden">
+            <div
+              onScroll={handlePhotosScroll}
+              className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:block md:overflow-hidden"
+            >
               <div className="size-full shrink-0 snap-start md:absolute md:inset-0 md:transition-opacity md:duration-300 md:group-hover:opacity-0">
                 <ProductImage url={mainUrl} alt={product.name} />
               </div>
@@ -68,6 +83,17 @@ function ProductCard({ product }: ProductCardProps) {
             <span className="absolute left-2 top-2 bg-ink/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               Agotado
             </span>
+          )}
+        </div>
+
+        {/* Celular: barra que avisa que hay otra foto al deslizar (la parte oscura es la foto que se ve).
+            Con una sola foto no se ve, pero guarda su espacio para que los nombres queden alineados */}
+        <div
+          aria-hidden="true"
+          className={`mt-2 h-[3px] overflow-hidden rounded-full bg-ink/10 md:hidden ${hasTwoPhotos ? '' : 'invisible'}`}
+        >
+          {hasTwoPhotos && (
+            <span ref={thumbRef} className="block h-full w-1/2 rounded-full bg-ink/35 will-change-transform" />
           )}
         </div>
 

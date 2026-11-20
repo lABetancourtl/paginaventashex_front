@@ -12,6 +12,14 @@ export const BANNER_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
 export const MAX_BANNER_IMAGE_MB = 10
 export const MAX_BANNER_VIDEO_MB = 50
 
+// La versión para celular de un medio: solo imágenes, hasta 10 MB
+export function validateBannerMobileFile(file: File): string | null {
+  if (!BANNER_IMAGE_TYPES.includes(file.type)) return 'Formato no permitido. Usa JPG, PNG, WebP o GIF.'
+  if (file.size === 0) return 'El archivo está vacío.'
+  if (file.size > MAX_BANNER_IMAGE_MB * 1024 * 1024) return `La imagen puede pesar hasta ${MAX_BANNER_IMAGE_MB} MB.`
+  return null
+}
+
 // Valida tipo y tamaño antes de subir; devuelve el problema o null
 export function validateBannerFile(file: File): string | null {
   const isImage = BANNER_IMAGE_TYPES.includes(file.type)

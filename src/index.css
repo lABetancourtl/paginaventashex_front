@@ -28,26 +28,34 @@
   /* Panel de administración */
   --color-card: #ffffff;
   /* Tarjetas del panel de administración */
-  --color-admin-bg: #f4f5f8;
+  --color-admin-bg: #f6f6f4;
   /* Fondo general del panel */
-  --color-admin-line: #e7e9ef;
+  --color-admin-line: #e7e6e2;
   /* Bordes suaves de tarjetas y tablas */
-  --color-admin-accent: #2f5bea;
+  --color-admin-accent: #2b59e0;
   /* Color de acción del panel (botones, activo) */
-  --color-admin-accent-hover: #2349c7;
+  --color-admin-accent-hover: #2249c2;
+  /* Texto fuerte, interruptores encendidos y filtro activo */
+  --color-admin-ink: #1c1c1a;
+  /* Fondo al pasar el mouse y del elemento activo del menú */
+  --color-admin-hover: #f1f0ec;
+  --color-admin-active: #efeee9;
+  /* Divisores entre filas de tablas */
+  --color-admin-row-line: #f0efeb;
   --color-admin-success: #16a34a;
   --color-admin-warning: #d97706;
 
   /* Entrada de los diálogos del panel */
-  --animate-admin-fade: admin-fade 160ms ease-out;
-  --animate-admin-pop: admin-pop 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-admin-fade: admin-fade 120ms ease-out;
+  --animate-admin-pop: admin-pop 140ms cubic-bezier(0.2, 0, 0, 1);
 
   @keyframes admin-fade {
     from { opacity: 0; }
   }
 
+  /* Entrada corta y sutil: casi no se mueve, solo aparece */
   @keyframes admin-pop {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    from { opacity: 0; transform: scale(0.985); }
   }
 
     /* Curvas para esconder y mostrar el header */
@@ -88,7 +96,7 @@
   html {
     scrollbar-gutter: stable;
     /* Al desplazarse hacia un elemento, deja espacio para el header fijo */
-    scroll-padding-top: 3.5rem;
+    scroll-padding-top: calc(3.5rem + env(safe-area-inset-top));
   }
 
   body {
@@ -292,13 +300,27 @@
   height: 0;
 }
 
+/* Cierre tipo telón: el footer baja por encima del fondo, despacio.
+   La medusa y el mensaje no se desvanecen ni se reacomodan: se deslizan con el telón
+   (FooterDeepSea anima su posición), así el mensaje se puede leer hasta el final */
 .deep-sea.is-closing {
-  transition: height .6s cubic-bezier(.65, 0, .35, 1);
+  transition: height 1.1s cubic-bezier(.6, 0, .25, 1);
 }
 
-.deep-sea.is-closing .deep-sea-inner {
-  opacity: 0;
-  transition: opacity .4s ease;
+.deep-sea.is-closing::before {
+  inset: auto -40% 0;
+  height: calc(var(--deep-sea-h, 460px) * 1.1);
+}
+
+/* Sombra suave bajo el borde del telón */
+.deep-sea.is-closing::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 36px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgb(0 0 0 / .22), transparent);
 }
 
 .deep-sea-inner {

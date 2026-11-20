@@ -166,9 +166,26 @@ interface UploadOptions {
 export async function apiPostForm<T>(
   url: string,
   formData: FormData,
-  { timeout = 60000, onProgress }: UploadOptions = {},
+  options: UploadOptions = {},
 ): Promise<T> {
-  const response = await http.post<ApiResponse<T>>(url, formData, {
+  return sendForm<T>('post', url, formData, options)
+}
+
+// Igual, pero con PUT (reemplaza un archivo existente)
+export async function apiPutForm<T>(url: string, formData: FormData, options: UploadOptions = {}): Promise<T> {
+  return sendForm<T>('put', url, formData, options)
+}
+
+async function sendForm<T>(
+  method: 'post' | 'put',
+  url: string,
+  formData: FormData,
+  { timeout = 60000, onProgress }: UploadOptions,
+): Promise<T> {
+  const response = await http.request<ApiResponse<T>>({
+    method,
+    url,
+    data: formData,
     // Subir un archivo tarda más que una petición normal
     timeout,
     onUploadProgress: (event) => {

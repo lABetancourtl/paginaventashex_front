@@ -1,6 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import AdminDialog, { AdminDialogBody, AdminDialogFooter } from './AdminDialog'
-import { adminDangerButtonClass, adminSecondaryButtonClass } from '../adminStyles'
+import { adminDangerSolidButtonClass, adminOutlineButtonClass } from '../adminStyles'
 
 interface AdminConfirmDialogProps {
   isOpen: boolean
@@ -34,21 +34,22 @@ function AdminConfirmDialog({
       icon={AlertTriangle}
       iconTone="danger"
       size="sm"
+      look="neutral"
     >
       <AdminDialogBody>
-        <p className="text-sm text-ink-muted">{message}</p>
+        <p className="text-sm text-[#6b6a65]">{message}</p>
         {error && (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">
             {error}
           </p>
         )}
       </AdminDialogBody>
-      <AdminDialogFooter>
+      <AdminDialogFooter look="neutral">
         {/* Cancelar recibe el foco: la opción segura por defecto */}
-        <button type="button" onClick={onCancel} disabled={isLoading} autoFocus className={adminSecondaryButtonClass}>
+        <button type="button" onClick={onCancel} disabled={isLoading} autoFocus className={adminOutlineButtonClass}>
           Cancelar
         </button>
-        <button type="button" onClick={onConfirm} disabled={isLoading} className={adminDangerButtonClass}>
+        <button type="button" onClick={onConfirm} disabled={isLoading} className={adminDangerSolidButtonClass}>
           {isLoading ? loadingLabel : confirmLabel}
         </button>
       </AdminDialogFooter>

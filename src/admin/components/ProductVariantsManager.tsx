@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Info, Pencil, Plus } from 'lucide-react'
+import { Info, Plus, Warehouse } from 'lucide-react'
 import {
   useCreateVariant,
   useSetVariantStatus,
@@ -7,12 +7,15 @@ import {
 } from '../../features/catalog/hooks/useVariantMutations'
 import type { AdminProductVariant, VariantRequest } from '../../features/catalog/types'
 import { getVariantRules } from '../variantRules'
-import StatusBadge from './StatusBadge'
-import StockText from './StockText'
-import AdminActionMenu from './AdminActionMenu'
+import AdminSwitch from './AdminSwitch'
 import VariantFormDialog from './VariantFormDialog'
 import type { VariantDialogState } from './VariantFormDialog'
-import { adminSecondaryButtonClass, adminTdClass, adminThClass } from '../adminStyles'
+import { adminCountChipClass, adminOutlineButtonClass, adminPanelClass } from '../adminStyles'
+
+const LOW_STOCK = 5
+
+// Columnas: variante · SKU · stock · activa · editar
+const gridCols = 'grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_100px_56px_80px]'
 
 export function ColorDot({ hex, size = 'size-5' }: { hex: string | null; size?: string }) {
   return (
@@ -68,126 +71,159 @@ function ProductVariantsManager({ productId, variants }: ProductVariantsManagerP
     setStatus.mutate({ productId, variantId: variant.id, active: !variant.isActive })
 
   const labelOf = (variant: AdminProductVariant) =>
-    [variant.sizeName, variant.colorName].filter(Boolean).join(' · ') || 'Variante única'
+    [variant.colorName, variant.sizeName].filter(Boolean).join(' · ') || 'Variante única'
 
-  const actionsOf = (variant: AdminProductVariant) => {
-    const busy = isUpdating(variant.id)
-    return [
-      { label: 'Editar', icon: Pencil, onClick: () => openEdit(variant) },
-      'separator' as const,
-      variant.isActive
-        ? { label: busy ? 'Guardando…' : 'Desactivar', icon: EyeOff, onClick: () => toggle(variant), danger: true, disabled: busy }
-        : { label: busy ? 'Guardando…' : 'Activar', icon: Eye, onClick: () => toggle(variant), disabled: busy },
-    ]
+  const totalStock = variants.filter((v) => v.isActive).reduce((sum, v) => sum + v.stock, 0)
+
+  const stockOf = (variant: AdminProductVariant) => {
+    if (variant.stock <= 0) return { note: 'Agotado', ink: 'text-[#b42318]' }
+    if (variant.stock <= LOW_STOCK) return { note: 'Stock bajo', ink: 'text-[#8a5a00]' }
+    return { note: '', ink: 'text-admin-ink' }
   }
 
+  const switchOf = (variant: AdminProductVariant, label: string) => (
+    <AdminSwitch
+      size="sm"
+      tone="ink"
+      checked={variant.isActive}
+      disabled={isUpdating(variant.id)}
+      label={variant.isActive ? `Desactivar ${label}` : `Activar ${label}`}
+      onChange={() => toggle(variant)}
+    />
+  )
+
   return (
-    <div>
+    <section id="variantes" className={`${adminPanelClass} scroll-mt-24 overflow-hidden`}>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 px-5 pb-3.5 pt-4">
+        <div className="min-w-0 flex-[1_1_200px]">
+          <h2 className="text-[15px] font-semibold">Variantes</h2>
+          <p className="mt-0.5 text-[13px] text-[#6b6a65]">Cada combinación de talla y color tiene su SKU.</p>
+        </div>
+        <span className={adminCountChipClass}>Stock total: {totalStock}</span>
+        {/* Pendiente: se conectará a la gestión de stock cuando exista en el backend */}
+        <button type="button" className={adminOutlineButtonClass}>
+          <Warehouse size={14} strokeWidth={1.75} aria-hidden="true" />
+          Gestionar stock
+        </button>
+      </div>
+
       {/* Guía para convertir un producto simple en uno con tallas o colores */}
       {rules.isSimple && (
-        <div className="mx-5 mt-5 flex gap-2.5 rounded-xl border border-admin-accent/20 bg-admin-accent/5 px-3 py-2.5 text-xs text-ink">
-          <Info size={15} strokeWidth={1.75} aria-hidden="true" className="mt-px shrink-0 text-admin-accent" />
+        <div className="mx-5 mb-3.5 flex gap-2.5 rounded-[10px] bg-admin-bg px-3 py-2.5 text-xs text-[#4a4945]">
+          <Info size={15} strokeWidth={1.75} aria-hidden="true" className="mt-px shrink-0 text-[#6b6a65]" />
           <p>
             Este producto tiene una sola variante, sin talla ni color. Para venderlo por tallas o colores,{' '}
-            <strong>edita esta variante</strong> y asígnale su primera talla y color. Después podrás agregar las
-            demás.
+            <strong className="font-semibold text-admin-ink">edita esta variante</strong> y asígnale su primera talla y
+            color. Después podrás agregar las demás.
           </p>
         </div>
       )}
 
-      {/* Computador: tabla */}
-      <div className="mt-2 hidden overflow-x-auto sm:block">
-        <table className="w-full">
-          <thead className="border-b border-admin-line">
-            <tr>
-              <th scope="col" className={`${adminThClass} pl-5`}>Variante</th>
-              <th scope="col" className={adminThClass}>SKU</th>
-              <th scope="col" className={adminThClass}>Unidades</th>
-              <th scope="col" className={adminThClass}>Estado</th>
-              <th scope="col" className={`${adminThClass} pr-5 text-right`}>Acción</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-admin-line">
-            {variants.map((variant) => {
-              const label = labelOf(variant)
-              return (
-                <tr key={variant.id} className="transition-colors hover:bg-admin-bg/50">
-                  <td className={`${adminTdClass} pl-5`}>
-                    <div className={`flex items-center gap-3 ${variant.isActive ? '' : 'opacity-50'}`}>
-                      {variant.colorId !== null ? (
-                        <ColorDot hex={variant.colorHexCode} />
-                      ) : (
-                        <span aria-hidden="true" className="size-5 shrink-0" />
-                      )}
-                      <span className="text-sm font-medium">{label}</span>
-                    </div>
-                  </td>
-                  <td className={adminTdClass}>
-                    <span className="rounded-md bg-admin-bg px-1.5 py-0.5 font-mono text-xs text-ink-muted">
-                      {variant.sku}
-                    </span>
-                  </td>
-                  <td className={`${adminTdClass} text-sm`}>
-                    <StockText stock={variant.stock} />
-                  </td>
-                  <td className={adminTdClass}>
-                    <StatusBadge tone={variant.isActive ? 'success' : 'neutral'}>
-                      {variant.isActive ? 'Activa' : 'Inactiva'}
-                    </StatusBadge>
-                  </td>
-                  <td className={`${adminTdClass} pr-5 text-right`}>
-                    <AdminActionMenu label={`Acciones de ${label}`} items={actionsOf(variant)} />
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Celular: lista */}
-      <ul className="mt-2 divide-y divide-admin-line sm:hidden">
+      {/* Computador: tabla en grilla */}
+      <div role="table" aria-label="Variantes" className="hidden md:block">
+        <div
+          role="row"
+          className={`grid ${gridCols} items-center gap-4 border-t border-admin-row-line px-5 py-2 text-xs font-medium text-[#8b8a84]`}
+        >
+          <span role="columnheader">Variante</span>
+          <span role="columnheader">SKU</span>
+          <span role="columnheader">Stock</span>
+          <span role="columnheader">Activa</span>
+          <span role="columnheader">
+            <span className="sr-only">Acciones</span>
+          </span>
+        </div>
         {variants.map((variant) => {
           const label = labelOf(variant)
+          const { note, ink } = stockOf(variant)
           return (
-            <li key={variant.id} className="flex items-center gap-3 px-4 py-3">
-              <div className={`flex min-w-0 flex-1 items-center gap-3 ${variant.isActive ? '' : 'opacity-50'}`}>
-                {variant.colorId !== null && <ColorDot hex={variant.colorHexCode} />}
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{label}</p>
-                  <p className="truncate font-mono text-xs text-ink-muted">{variant.sku}</p>
-                  <div className="mt-1 flex items-center gap-2 text-xs">
-                    <StockText stock={variant.stock} />
-                    <StatusBadge tone={variant.isActive ? 'success' : 'neutral'}>
-                      {variant.isActive ? 'Activa' : 'Inactiva'}
-                    </StatusBadge>
-                  </div>
-                </div>
+            <div
+              key={variant.id}
+              role="row"
+              className={`grid ${gridCols} items-center gap-4 border-t border-admin-row-line px-5 py-2.5`}
+            >
+              <div role="cell" className="flex min-w-0 items-center gap-2.5">
+                {variant.colorId !== null ? (
+                  <ColorDot hex={variant.colorHexCode} size="size-4" />
+                ) : (
+                  <span aria-hidden="true" className="size-4 shrink-0" />
+                )}
+                <span className={`truncate text-sm font-medium ${variant.isActive ? 'text-admin-ink' : 'text-[#8b8a84]'}`}>
+                  {label}
+                </span>
               </div>
-              <AdminActionMenu label={`Acciones de ${label}`} items={actionsOf(variant)} />
+              <span role="cell" className="truncate font-mono text-xs text-[#6b6a65]">
+                {variant.sku}
+              </span>
+              <div role="cell" className="flex flex-col gap-0.5 text-sm">
+                <span className={`font-semibold tabular-nums ${ink}`}>{variant.stock} und.</span>
+                {note && <span className={`text-[11px] font-medium ${ink}`}>{note}</span>}
+              </div>
+              <div role="cell" className="flex items-center">
+                {switchOf(variant, label)}
+              </div>
+              <div role="cell" className="flex justify-end">
+                <button type="button" onClick={() => openEdit(variant)} aria-label={`Editar ${label}`} className={adminOutlineButtonClass}>
+                  Editar
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Celular: tarjetas con controles de 44px */}
+      <ul className="md:hidden">
+        {variants.map((variant) => {
+          const label = labelOf(variant)
+          const { note, ink } = stockOf(variant)
+          return (
+            <li key={variant.id} className="flex flex-col gap-2.5 border-t border-admin-row-line px-4 py-3.5">
+              <div className="flex items-center gap-2.5">
+                {variant.colorId !== null && <ColorDot hex={variant.colorHexCode} size="size-4" />}
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-medium ${variant.isActive ? 'text-admin-ink' : 'text-[#8b8a84]'}`}>{label}</p>
+                  <p className="truncate font-mono text-[11px] text-[#8b8a84]">{variant.sku}</p>
+                </div>
+                <div className="flex size-11 items-center justify-center">{switchOf(variant, label)}</div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className={`font-semibold tabular-nums ${ink}`}>{variant.stock} und.</span>
+                {note && <span className={`text-xs font-medium ${ink}`}>{note}</span>}
+                <div className="flex-1" />
+                <button type="button" onClick={() => openEdit(variant)} aria-label={`Editar ${label}`} className={adminOutlineButtonClass}>
+                  Editar
+                </button>
+              </div>
             </li>
           )
         })}
       </ul>
 
-      <div className="flex flex-col gap-3 border-t border-admin-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      {variants.length === 0 && (
+        <p className="border-t border-admin-row-line px-5 py-7 text-center text-sm text-[#6b6a65]">
+          Sin variantes, el producto no se puede comprar. Agrega al menos una.
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-admin-row-line px-5 pb-4 pt-3">
+        {rules.canAdd && (
+          <button type="button" onClick={openCreate} className={adminOutlineButtonClass}>
+            <Plus size={14} strokeWidth={2} aria-hidden="true" />
+            Agregar variante
+          </button>
+        )}
         {setStatus.error ? (
           <p role="alert" className="text-sm text-danger">
             {setStatus.error.message}
           </p>
-        ) : !rules.canAdd && !rules.isSimple ? (
-          <p className="text-xs text-ink-muted">
-            Las variantes activas no usan talla ni color, así que no se pueden agregar más.
-          </p>
         ) : (
-          <span />
-        )}
-
-        {rules.canAdd && (
-          <button type="button" onClick={openCreate} className={adminSecondaryButtonClass}>
-            <Plus size={15} strokeWidth={2} aria-hidden="true" />
-            Agregar variante
-          </button>
+          !rules.canAdd &&
+          !rules.isSimple && (
+            <p className="text-xs text-[#8b8a84]">
+              Las variantes activas no usan talla ni color, así que no se pueden agregar más.
+            </p>
+          )
         )}
       </div>
 
@@ -199,7 +235,7 @@ function ProductVariantsManager({ productId, variants }: ProductVariantsManagerP
         onSubmit={handleSubmit}
         onClose={closeDialog}
       />
-    </div>
+    </section>
   )
 }
 

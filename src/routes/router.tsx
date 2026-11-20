@@ -82,7 +82,7 @@ export const router = createBrowserRouter([
       { path: 'productos/:id', element: <AdminProductEditPage /> },
       { path: 'categorias', element: <AdminCategoriesPage /> },
       // Un solo editor: el :id opcional solo indica qué bloque está seleccionado
-      { path: 'inicio/:id?', element: <AdminHomeEditorPage />, handle: { adminFullBleed: true } },
+      { path: 'inicio/:id?', element: <AdminHomeEditorPage /> },
       { path: 'pedidos', element: <AdminPlaceholderPage title="Pedidos" /> },
     ],
   },
